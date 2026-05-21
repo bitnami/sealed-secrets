@@ -4,6 +4,23 @@ Latest release:
 
 [![](https://img.shields.io/github/release/bitnami-labs/sealed-secrets.svg)](https://github.com/bitnami-labs/sealed-secrets/releases/latest)
 
+## v0.37.0
+
+- Expose plaintext template.data values in template rendering context ([#1940](https://github.com/bitnami-labs/sealed-secrets/pull/1940))
+- Bump Go version to 1.26.3 ([#1966](https://github.com/bitnami-labs/sealed-secrets/pull/1966))
+- Bump 0.36.1 api,client-go,apimachinery and code-generator ([#1965](https://github.com/bitnami-labs/sealed-secrets/pull/1965))
+- Bump distroless/static from `47b2d72` to `3592aa8` in /docker ([#1964](https://github.com/bitnami-labs/sealed-secrets/pull/1964))
+- Bump github.com/onsi/ginkgo/v2 from 2.28.1 to 2.28.3 ([#1956](https://github.com/bitnami-labs/sealed-secrets/pull/1956))
+- Bump golang.org/x/crypto from 0.50.0 to 0.51.0 ([#1957](https://github.com/bitnami-labs/sealed-secrets/pull/1957))
+- Cooldown period for dependency updates and update K8S support ([#1955](https://github.com/bitnami-labs/sealed-secrets/pull/1955))
+- Bump github.com/mattn/go-isatty from 0.0.21 to 0.0.22 ([#1954](https://github.com/bitnami-labs/sealed-secrets/pull/1954))
+- chore: typo `occured` -> `occurred` in prometheus-mixin README ([#1949](https://github.com/bitnami-labs/sealed-secrets/pull/1949))
+- Bump k8s.io/code-generator from 0.35.3 to 0.35.4 ([#1946](https://github.com/bitnami-labs/sealed-secrets/pull/1946))
+- Bump k8s.io/client-go from 0.35.3 to 0.35.4 ([#1947](https://github.com/bitnami-labs/sealed-secrets/pull/1947))
+- Bump github.com/mattn/go-isatty from 0.0.20 to 0.0.21 ([#1943](https://github.com/bitnami-labs/sealed-secrets/pull/1943))
+- Bump golang.org/x/crypto from 0.49.0 to 0.50.0 ([#1942](https://github.com/bitnami-labs/sealed-secrets/pull/1942))
+- fix: add explicit GITHUB_TOKEN permissions to workflows ([#1933](https://github.com/bitnami-labs/sealed-secrets/pull/1933))
+
 ## v0.36.6
 - Incomplete release for dockerhub credentials problems
 
