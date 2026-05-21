@@ -67,9 +67,8 @@ jobs:
         env:
           OCI_PASS: ${{ secrets.OCI_PASSWORD }}
           OCI_USR: ${{ secrets.OCI_USERNAME }}
-          HELM_EXPERIMENTAL_OCI: 1
         run: |
-          echo $OCI_PASS | helm registry login -u $OCI_USR --password-stdin registry-1.docker.io
+          echo $OCI_PASS | docker login -u $OCI_USR --password-stdin registry-1.docker.io
           helm package helm/sealed-secrets/
           helm push sealed-secrets-${{ env.chart_version }}.tgz oci://registry-1.docker.io/bitnamicharts/sealed-secrets
 
