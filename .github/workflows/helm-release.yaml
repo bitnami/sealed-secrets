@@ -70,7 +70,7 @@ jobs:
         run: |
           echo $OCI_PASS | docker login -u $OCI_USR --password-stdin registry-1.docker.io
           helm package helm/sealed-secrets/
-          helm push sealed-secrets-${{ env.chart_version }}.tgz oci://registry-1.docker.io/bitnamicharts/sealed-secrets
+          helm push sealed-secrets-${{ env.chart_version }}.tgz oci://registry-1.docker.io/bitnamicharts
 
       - name: Create imglock file
         working-directory: ./helm
