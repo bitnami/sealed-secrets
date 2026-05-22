@@ -73,6 +73,7 @@ endef
 $(eval $(call binaries,linux,amd64))
 $(eval $(call binaries,linux,arm64))
 $(eval $(call binaries,linux,arm))
+$(eval $(call binaries,linux,ppc64le))
 $(eval $(call binaries,darwin,amd64))
 $(eval $(call binary,kubeseal,windows,amd64))
 
@@ -100,6 +101,7 @@ endef
 $(eval $(call images,linux,amd64))
 $(eval $(call images,linux,arm64))
 $(eval $(call images,linux,arm))
+$(eval $(call images,linux,ppc64le))
 
 %.yaml: %.jsonnet
 	$(KUBECFG) show -V CONTROLLER_IMAGE=$(CONTROLLER_IMAGE) -V IMAGE_PULL_POLICY=$(IMAGE_PULL_POLICY) -o yaml $< > $@.tmp

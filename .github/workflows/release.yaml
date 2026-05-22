@@ -62,7 +62,7 @@ jobs:
         uses: docker/setup-qemu-action@8b122486cedac8393e77aa9734c3528886e4a1a8 # v2.0.0
         with:
           image: tonistiigi/binfmt:latest
-          platforms: arm64,arm
+          platforms: arm64,arm,ppc64le
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # v2.0.0
 
@@ -119,7 +119,7 @@ jobs:
         with:
           context: .
           file: ./docker/controller.Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm
+          platforms: linux/amd64,linux/arm64,linux/arm,linux/ppc64le
           push: true
           tags: ${{ steps.meta_controller.outputs.tags }}
       - name: Extract metadata (tags, labels) for Docker kubeseal image
@@ -138,7 +138,7 @@ jobs:
         with:
           context: .
           file: ./docker/kubeseal.Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm
+          platforms: linux/amd64,linux/arm64,linux/arm,linux/ppc64le
           push: true
           tags: ${{ steps.meta_kubeseal.outputs.tags }}
       - name: Sign controller image with a key in GHCR

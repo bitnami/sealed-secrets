@@ -13,6 +13,7 @@ builds:
       - linux_amd64
       - linux_arm64
       - linux_arm
+      - linux_ppc64le
       - windows_amd64
   - binary: kubeseal
     id: kubeseal
@@ -25,6 +26,7 @@ builds:
       - linux_amd64
       - linux_arm64
       - linux_arm
+      - linux_ppc64le
       - windows_amd64
 archives:
   - builds:
