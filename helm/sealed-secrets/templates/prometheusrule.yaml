@@ -1,0 +1,54 @@
+{{- if .Values.metrics.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "sealed-secrets.fullname" . }}
+
+  {{- if .Values.metrics.prometheusRule.namespace }}
+  namespace: {{ .Values.metrics.prometheusRule.namespace }}
+  {{- else }}
+  namespace: {{ include "sealed-secrets.namespace" . }}
+  {{- end }}
+
+  labels:
+    {{- include "sealed-secrets.labels" . | nindent 4 }}
+    {{- if .Values.metrics.prometheusRule.labels }}
+    {{- include "sealed-secrets.render" (dict "value" .Values.metrics.prometheusRule.labels "context" $) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonLabels }}
+    {{- include "sealed-secrets.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+
+  annotations:
+    {{- if .Values.metrics.prometheusRule.annotations }}
+    {{- include "sealed-secrets.render" (dict "value" .Values.metrics.prometheusRule.annotations "context" $) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonAnnotations }}
+    {{- include "sealed-secrets.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+    {{- end }}
+
+spec:
+  groups:
+    {{- range .Values.metrics.prometheusRule.groups }}
+    - name: {{ .name }}
+      rules:
+        {{- range .rules }}
+        - alert: {{ .alert }}
+          expr: |
+            {{ .expr | nindent 12 }}
+          {{- if .for }}
+          for: {{ .for }}
+          {{- end }}
+
+          {{- if .labels }}
+          labels:
+            {{- toYaml .labels | nindent 12 }}
+          {{- end }}
+
+          {{- if .annotations }}
+          annotations:
+            {{- toYaml .annotations | nindent 12 }}
+          {{- end }}
+        {{- end }}
+    {{- end }}
+{{- end }}

@@ -23,7 +23,7 @@ commonAnnotations: {}
 
 ## @param commonLabels [object] Labels to add to all deployed resources
 ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-## 
+##
 commonLabels: {}
 
 ## @section Sealed Secrets Parameters
@@ -84,7 +84,7 @@ keyrenewperiod: ""
 keyttl: ""
 ## @param keycutofftime Specifies a date at which the controller should generate a new certificate. Useful in early key renewal scenarios.
 ## Takes a date formated according to RFC1123. Can be obtained with the 'date -R' command on a unix system.
-## e.g 
+## e.g
 ## keycutofftime: "Mon, 14 Oct 2024 21:45:30 +0200"
 ##
 keycutofftime: ""
@@ -98,10 +98,10 @@ rateLimitBurst: ""
 ##
 additionalNamespaces: []
 ## @param privateKeyAnnotations Map of annotations to be set on the sealing keypairs
-## 
+##
 privateKeyAnnotations: {}
 ## @param privateKeyLabels Map of labels to be set on the sealing keypairs
-## 
+##
 privateKeyLabels: {}
 ## @param logInfoStdout Specifies whether the Sealed Secrets controller will log info to stdout
 ##
@@ -467,6 +467,37 @@ rbac:
 ## @section Metrics parameters
 
 metrics:
+  prometheusRule:
+    ## @param metrics.prometheusRule.enabled Specify if a PrometheusRule will be deployed for Prometheus Operator
+    ##
+    enabled: false
+
+    ## @param metrics.prometheusRule.namespace Namespace where Prometheus Operator is running in
+    ##
+    namespace: ""
+
+    ## @param metrics.prometheusRule.labels Extra labels for the PrometheusRule
+    ##
+    labels: {}
+
+    ## @param metrics.prometheusRule.annotations Extra annotations for the PrometheusRule
+    ##
+    annotations: {}
+
+    ## @param metrics.prometheusRule.groups Prometheus alerting rule groups
+    ##
+    groups:
+      - name: sealed-secrets-controller.rules
+        rules:
+          - alert: SealedSecretsControllerNotReady
+            expr: |
+              sealed_secrets_controller_condition_info != 1
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Sealed Secrets controller is not Synced"
+              description: "At least one SealedSecret is in a non-synced state (0 or -1). Check controller logs and secret reconciliation status."
   ## Prometheus Operator ServiceMonitor configuration
   ##
   serviceMonitor:
