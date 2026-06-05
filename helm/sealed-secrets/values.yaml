@@ -195,16 +195,20 @@ resources:
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ## @param podSecurityContext.enabled Enabled Sealed Secret pods' Security Context
 ## @param podSecurityContext.fsGroup Set Sealed Secret pod's Security Context fsGroup
+## @param podSecurityContext.seccompProfile.type Set Sealed Secret pod's Security Context seccomp profile type
 ##
 podSecurityContext:
   enabled: true
   fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
 ## Configure Container Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ## @param containerSecurityContext.enabled Enabled Sealed Secret containers' Security Context
 ## @param containerSecurityContext.readOnlyRootFilesystem Whether the Sealed Secret container has a read-only root filesystem
 ## @param containerSecurityContext.runAsNonRoot Indicates that the Sealed Secret container must run as a non-root user
 ## @param containerSecurityContext.runAsUser Set Sealed Secret containers' Security Context runAsUser
+## @param containerSecurityContext.allowPrivilegeEscalation Set Sealed Secret containers' privilege escalation
 ## @extra containerSecurityContext.capabilities Adds and removes POSIX capabilities from running containers (see `values.yaml`)
 ## @skip  containerSecurityContext.capabilities.drop
 ##
@@ -213,6 +217,7 @@ containerSecurityContext:
   readOnlyRootFilesystem: true
   runAsNonRoot: true
   runAsUser: 1001
+  allowPrivilegeEscalation: false
   capabilities:
     drop:
       - ALL
