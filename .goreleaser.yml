@@ -65,7 +65,7 @@ release:
     Install the SealedSecret CRD and server-side controller into the `kube-system` namespace:
 
     ```sh
-    kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ .Version }}/controller.yaml
+    kubectl apply -f https://github.com/bitnami/sealed-secrets/releases/download/v{{ .Version }}/controller.yaml
     ```
 
     ### Client-side
@@ -74,7 +74,7 @@ release:
 
     **Linux x86_64:**
     ```sh
-    curl -OL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ .Version }}/kubeseal-{{ .Version }}-linux-amd64.tar.gz"
+    curl -OL "https://github.com/bitnami/sealed-secrets/releases/download/v{{ .Version }}/kubeseal-{{ .Version }}-linux-amd64.tar.gz"
     tar -xvzf kubeseal-{{ .Version }}-linux-amd64.tar.gz kubeseal
     sudo install -m 755 kubeseal /usr/local/bin/kubeseal
     ```
@@ -96,7 +96,7 @@ release:
 
     #### Nixpkgs
 
-    The `kubeseal` client is available on [Nixpkgs](https://search.nixos.org/packages?channel=unstable&show=kubeseal&from=0&size=50&sort=relevance&type=packages&query=kubeseal): (**DISCLAIMER**: Not maintained by bitnami-labs)
+    The `kubeseal` client is available on [Nixpkgs](https://search.nixos.org/packages?channel=unstable&show=kubeseal&from=0&size=50&sort=relevance&type=packages&query=kubeseal): (**DISCLAIMER**: Not maintained by bitnami)
 
     ```sh
     nix-env -iA nixpkgs.kubeseal
@@ -109,7 +109,7 @@ release:
     `$GOPATH/bin` with:
 
     ```sh
-    go install github.com/bitnami-labs/sealed-secrets/cmd/kubeseal@main
+    go install github.com/bitnami/sealed-secrets/cmd/kubeseal@main
     ```
 
     You can specify a release tag or a commit SHA instead of `main`.
@@ -122,7 +122,7 @@ release:
 
     ## Release Notes
 
-    Please read the [RELEASE_NOTES](https://github.com/bitnami-labs/sealed-secrets/blob/main/RELEASE-NOTES.md) which contain among other things important information for those upgrading from previous releases.
+    Please read the [RELEASE_NOTES](https://github.com/bitnami/sealed-secrets/blob/main/RELEASE-NOTES.md) which contain among other things important information for those upgrading from previous releases.
     ## Thanks!
 
   extra_files:

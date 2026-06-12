@@ -1,4 +1,4 @@
-module github.com/bitnami-labs/sealed-secrets
+module github.com/bitnami/sealed-secrets
 
 go 1.26.2
 

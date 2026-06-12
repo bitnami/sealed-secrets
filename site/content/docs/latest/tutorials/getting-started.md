@@ -9,7 +9,7 @@
 
 ## Introduction
 
-[Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) is commonly used for achieving declarative Kubernetes Secret Management. The project offers a mechanism to encrypt secrets locally. Since the Sealed Secrets are encrypted, they can be safely stored in a code repository. This enables an easy to implement GitOps flow that is very popular among the OSS community.
+[Sealed Secrets](https://github.com/bitnami/sealed-secrets) is commonly used for achieving declarative Kubernetes Secret Management. The project offers a mechanism to encrypt secrets locally. Since the Sealed Secrets are encrypted, they can be safely stored in a code repository. This enables an easy to implement GitOps flow that is very popular among the OSS community.
 
 This guide walks you through the process of deploying Sealed Secrets in your cluster and installing an example secret.
 
@@ -32,7 +32,7 @@ The controller can be deployed using three different methods: direct yaml manife
 
 #### Sealed Secrets manifest
 
-Sealed secrets controller manifests are available from the [releases page](https://github.com/bitnami-labs/sealed-secrets/releases). You can choose the most convenient deployment for your cluster:
+Sealed secrets controller manifests are available from the [releases page](https://github.com/bitnami/sealed-secrets/releases). You can choose the most convenient deployment for your cluster:
 
 - `controller.yaml` Is a full manifest description of all the components required for the Sealed Secrets controller to operate. This includes Cluster role permissions and CRD definitions.
 - `controller-norbac.yaml` Is a restricted version of the manifest descriptor. This version does not include CRDs nor Cluster roles.
@@ -41,7 +41,7 @@ Sealed secrets controller manifests are available from the [releases page](https
 
 The Sealed Secrets [Helm chart](https://helm.sh/) is officially supported and hosted in this GitHub repository.
 ```shell
-helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+helm repo add sealed-secrets https://bitnami.github.io/sealed-secrets
 helm install sealed-secrets-controller sealed-secrets/sealed-secrets \
 --set namespace=kube-system \
 ```
@@ -56,7 +56,7 @@ It is also possible to install Sealed Secrets as a [Carvel package](https://carv
 # Deploy kapp-controller
 kapp deploy -a kc -f https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml
 # Deploy the Sealed Secrets package in the cluster
-kapp deploy -a sealed-secrets-carvel -f https://raw.githubusercontent.com/bitnami-labs/sealed-secrets/main/carvel/package.yaml
+kapp deploy -a sealed-secrets-carvel -f https://raw.githubusercontent.com/bitnami/sealed-secrets/main/carvel/package.yaml
 Changes
 
 Namespace  Name                              Kind     Conds.  Age  Op      Op st.  Wait to    Rs  Ri
@@ -102,12 +102,12 @@ nix-env -iA nixpkgs.kubeseal
 The `kubeseal` client can be installed on Linux, using the below commands:
 
 ```bash
-wget https://github.com/bitnami-labs/sealed-secrets/releases/download/<release-tag>/kubeseal-<version>-linux-amd64.tar.gz
+wget https://github.com/bitnami/sealed-secrets/releases/download/<release-tag>/kubeseal-<version>-linux-amd64.tar.gz
 tar -xvzf kubeseal-<version>-linux-amd64.tar.gz kubeseal
 sudo install -m 755 kubeseal /usr/local/bin/kubeseal
 ```
 
-where `release-tag` is the [version tag](https://github.com/bitnami-labs/sealed-secrets/tags) of the kubeseal release you want to use. For example: `v0.21.0`.
+where `release-tag` is the [version tag](https://github.com/bitnami/sealed-secrets/tags) of the kubeseal release you want to use. For example: `v0.21.0`.
 
 #### Installation from source
 
@@ -115,7 +115,7 @@ If you just want the latest client tool, it can be installed into
 `$GOPATH/bin` with:
 
 ```bash
-go install github.com/bitnami-labs/sealed-secrets/cmd/kubeseal@main
+go install github.com/bitnami/sealed-secrets/cmd/kubeseal@main
 ```
 
 You can specify a release tag or a commit SHA instead of `main`.

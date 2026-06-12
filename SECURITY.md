@@ -4,7 +4,7 @@ The community has adopted this security disclosure and response policy to ensure
 
 ## Supported Versions
 
-For a list of support versions that this project will potentially create security fixes for, please refer to the [Releases page](https://github.com/bitnami-labs/sealed-secrets/blob/main/CONTRIBUTING.md#release-process) on this project's GitHub and/or project related documentation on release cadence and support.
+For a list of support versions that this project will potentially create security fixes for, please refer to the [Releases page](https://github.com/bitnami/sealed-secrets/blob/main/CONTRIBUTING.md#release-process) on this project's GitHub and/or project related documentation on release cadence and support.
 
 ## Reporting a Vulnerability - Private Disclosure Process
 
@@ -19,7 +19,7 @@ To report a vulnerability or a security-related issue, please contact the mainta
 * Directly via the team email addresses (sealed-secrets.pdl@broadcom.com)
 * Open a [GitHub Security Advisory](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability). This allows for anyone to report security vulnerabilities directly and privately to the maintainers via GitHub. Note that this option may not be present for every repository.
 
-The report will be fielded by the [maintainers](https://github.com/bitnami-labs/sealed-secrets/blob/main/MAINTAINERS.md) who have committer and release permissions. Feedback will be sent within 3 business days, including a detailed plan to investigate the issue and any potential workarounds to perform in the meantime.
+The report will be fielded by the [maintainers](https://github.com/bitnami/sealed-secrets/blob/main/MAINTAINERS.md) who have committer and release permissions. Feedback will be sent within 3 business days, including a detailed plan to investigate the issue and any potential workarounds to perform in the meantime.
 
 Do not report non-security-impacting bugs through this channel. Use GitHub issues for all non-security-impacting bugs.
 

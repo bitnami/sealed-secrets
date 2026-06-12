@@ -37,9 +37,9 @@ menu:
     url: /docs/contributing/
 params:
   twitter_url: "https://twitter.com/bitnami"
-  github_url: "https://github.com/bitnami-labs/sealed-secrets"
+  github_url: "https://github.com/bitnami/sealed-secrets"
   slack_url: "https://kubernetes.slack.com/messages/sealed-secrets"
-  github_base_url: "https://github.com/bitnami-labs/sealed-secrets"
+  github_base_url: "https://github.com/bitnami/sealed-secrets"
   use_advanced_docs: true
   docs_right_sidebar: true
   docs_search: false

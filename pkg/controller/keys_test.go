@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitnami-labs/sealed-secrets/pkg/crypto"
+	"github.com/bitnami/sealed-secrets/pkg/crypto"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

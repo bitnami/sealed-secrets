@@ -25,7 +25,7 @@ The controller exposes an API defined using the Swagger or OpenAPI v3 specificat
 ## Download the controller source code
 
 ```bash
-git clone https://github.com/bitnami-labs/sealed-secrets.git $SEALED_SECRETS_DIR
+git clone https://github.com/bitnami/sealed-secrets.git $SEALED_SECRETS_DIR
 ```
 
 The controller sources are located under `cmd/controller/` and use packages from the `pkg` directory.

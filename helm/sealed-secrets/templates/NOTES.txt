@@ -6,7 +6,7 @@ You should now be able to create sealed secrets.
 
 1. Install the client-side tool (kubeseal) as explained in the docs below:
 
-    https://github.com/bitnami-labs/sealed-secrets#installation-from-source
+    https://github.com/bitnami/sealed-secrets#installation-from-source
 
 2. Create a sealed secret file running the command below:
 

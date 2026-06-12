@@ -32,8 +32,8 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/keyutil"
 
-	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
-	"github.com/bitnami-labs/sealed-secrets/pkg/crypto"
+	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	"github.com/bitnami/sealed-secrets/pkg/crypto"
 	certUtil "k8s.io/client-go/util/cert"
 )
 

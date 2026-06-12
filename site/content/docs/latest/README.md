@@ -3,7 +3,7 @@
 
 Everything you need to know about Sealed Secrets.
 
-> NOTE: we are currently moving our docs to a new website and reviewing our documentation files. During the process, eventual broken links and minor inconsistences may appear. Please, feel free to contact us if you have any questions: file an [issue](https://github.com/bitnami-labs/sealed-secrets/issues), or talk to us on the [#Sealed Secrets slack channel](https://kubernetes.slack.com/messages/sealed-secrets).
+> NOTE: we are currently moving our docs to a new website and reviewing our documentation files. During the process, eventual broken links and minor inconsistences may appear. Please, feel free to contact us if you have any questions: file an [issue](https://github.com/bitnami/sealed-secrets/issues), or talk to us on the [#Sealed Secrets slack channel](https://kubernetes.slack.com/messages/sealed-secrets).
 
 ## Documentation overview
 

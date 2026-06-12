@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bitnami-labs/sealed-secrets/pkg/flagenv"
+	"github.com/bitnami/sealed-secrets/pkg/flagenv"
 )
 
 func TestFlagenv(t *testing.T) {

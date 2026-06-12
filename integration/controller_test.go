@@ -25,9 +25,9 @@ import (
 	certUtil "k8s.io/client-go/util/cert"
 	"k8s.io/client-go/util/keyutil"
 
-	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
-	ssclient "github.com/bitnami-labs/sealed-secrets/pkg/client/clientset/versioned"
-	"github.com/bitnami-labs/sealed-secrets/pkg/crypto"
+	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	ssclient "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned"
+	"github.com/bitnami/sealed-secrets/pkg/crypto"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

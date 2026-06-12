@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
-	"github.com/bitnami-labs/sealed-secrets/pkg/crypto"
-	"github.com/bitnami-labs/sealed-secrets/pkg/kubeseal"
+	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	"github.com/bitnami/sealed-secrets/pkg/crypto"
+	"github.com/bitnami/sealed-secrets/pkg/kubeseal"
 	flag "github.com/spf13/pflag"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"

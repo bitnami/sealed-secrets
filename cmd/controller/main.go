@@ -10,13 +10,13 @@ import (
 
 	flag "github.com/spf13/pflag"
 
-	"github.com/bitnami-labs/sealed-secrets/pkg/controller"
-	"github.com/bitnami-labs/sealed-secrets/pkg/flagenv"
-	"github.com/bitnami-labs/sealed-secrets/pkg/log"
-	"github.com/bitnami-labs/sealed-secrets/pkg/pflagenv"
+	"github.com/bitnami/sealed-secrets/pkg/controller"
+	"github.com/bitnami/sealed-secrets/pkg/flagenv"
+	"github.com/bitnami/sealed-secrets/pkg/log"
+	"github.com/bitnami/sealed-secrets/pkg/pflagenv"
 
-	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
-	"github.com/bitnami-labs/sealed-secrets/pkg/buildinfo"
+	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	"github.com/bitnami/sealed-secrets/pkg/buildinfo"
 )
 
 const (

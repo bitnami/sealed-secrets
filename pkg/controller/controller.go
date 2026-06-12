@@ -29,12 +29,12 @@ import (
 
 	"k8s.io/client-go/informers"
 
-	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
-	ssclientset "github.com/bitnami-labs/sealed-secrets/pkg/client/clientset/versioned"
-	ssscheme "github.com/bitnami-labs/sealed-secrets/pkg/client/clientset/versioned/scheme"
-	ssv1alpha1client "github.com/bitnami-labs/sealed-secrets/pkg/client/clientset/versioned/typed/sealedsecrets/v1alpha1"
-	ssinformer "github.com/bitnami-labs/sealed-secrets/pkg/client/informers/externalversions"
-	"github.com/bitnami-labs/sealed-secrets/pkg/multidocyaml"
+	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	ssclientset "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned"
+	ssscheme "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned/scheme"
+	ssv1alpha1client "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned/typed/sealedsecrets/v1alpha1"
+	ssinformer "github.com/bitnami/sealed-secrets/pkg/client/informers/externalversions"
+	"github.com/bitnami/sealed-secrets/pkg/multidocyaml"
 )
 
 const (

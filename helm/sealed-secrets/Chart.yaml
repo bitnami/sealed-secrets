@@ -3,7 +3,7 @@ annotations:
 apiVersion: v2
 appVersion: 0.36.6
 description: Helm chart for the sealed-secrets controller.
-home: https://github.com/bitnami-labs/sealed-secrets
+home: https://github.com/bitnami/sealed-secrets
 icon: https://bitnami.com/assets/stacks/sealed-secrets/img/sealed-secrets-stack-220x234.png
 keywords:
   - secrets
@@ -11,9 +11,9 @@ keywords:
 kubeVersion: ">=1.16.0-0"
 maintainers:
   - name: Bitnami
-    url: https://github.com/bitnami-labs/sealed-secrets
+    url: https://github.com/bitnami/sealed-secrets
 name: sealed-secrets
 type: application
 version: 2.18.5
 sources:
-  - https://github.com/bitnami-labs/sealed-secrets
+  - https://github.com/bitnami/sealed-secrets

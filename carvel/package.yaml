@@ -424,7 +424,7 @@ spec:
     spec:
       fetch:
         - imgpkgBundle:
-            image: ghcr.io/bitnami-labs/sealed-secrets-carvel@sha256:9dd602e7653ef7979a67eeab60bd58fe1059de8cc208d40d5293279bd80f6478
+            image: ghcr.io/bitnami/sealed-secrets-carvel@sha256:9dd602e7653ef7979a67eeab60bd58fe1059de8cc208d40d5293279bd80f6478
       template:
         - helmTemplate:
             path: sealed-secrets

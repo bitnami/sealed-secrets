@@ -86,7 +86,7 @@ kubeseal <mysecret.json >mysealedsecret.json
 
 ## How to verify the images?
 
-Our images are being signed using [cosign](https://github.com/sigstore/cosign). The signatures have been saved in our [GitHub Container Registry](https://ghcr.io/bitnami-labs/sealed-secrets-controller/signs).
+Our images are being signed using [cosign](https://github.com/sigstore/cosign). The signatures have been saved in our [GitHub Container Registry](https://ghcr.io/bitnami/sealed-secrets-controller/signs).
 
 > Images up to and including v0.20.2 were signed using Cosign v1. Newer images are signed with Cosign v2.
 
@@ -94,12 +94,12 @@ It is pretty simple to verify the images:
 
 ```console
 # export the COSIGN_VARIABLE setting up the GitHub container registry signs path
-$ export COSIGN_REPOSITORY=ghcr.io/bitnami-labs/sealed-secrets-controller/signs
+$ export COSIGN_REPOSITORY=ghcr.io/bitnami/sealed-secrets-controller/signs
 
 # verify the image uploaded in GHCR
-$ cosign verify --key .github/workflows/cosign.pub ghcr.io/bitnami-labs/sealed-secrets-controller:latest
+$ cosign verify --key .github/workflows/cosign.pub ghcr.io/bitnami/sealed-secrets-controller:latest
 
-Verification for ghcr.io/bitnami-labs/sealed-secrets-controller:latest --
+Verification for ghcr.io/bitnami/sealed-secrets-controller:latest --
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - Existence of the claims in the transparency log was verified offline

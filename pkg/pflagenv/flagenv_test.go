@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bitnami-labs/sealed-secrets/pkg/pflagenv"
+	"github.com/bitnami/sealed-secrets/pkg/pflagenv"
 	flag "github.com/spf13/pflag"
 )
 

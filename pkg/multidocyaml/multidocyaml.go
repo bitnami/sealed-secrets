@@ -17,7 +17,7 @@ func isMultiDocumentYAML(src []byte) bool {
 // EnsureNotMultiDoc returns an error if the yaml.
 func EnsureNotMultiDoc(src []byte) error {
 	if isMultiDocumentYAML(src) {
-		return fmt.Errorf("Multistream YAML not supported yet (see https://github.com/bitnami-labs/sealed-secrets/issues/114)")
+		return fmt.Errorf("Multistream YAML not supported yet (see https://github.com/bitnami/sealed-secrets/issues/114)")
 	}
 	return nil
 }

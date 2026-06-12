@@ -10,7 +10,7 @@ assignees: ''
 <!--
  Before you open the bug report please review the following FAQ:
 
- - [Sealed Secrets FAQ](https://github.com/bitnami-labs/sealed-secrets#faq)
+ - [Sealed Secrets FAQ](https://github.com/bitnami/sealed-secrets#faq)
  -->
 
 **Which component**:

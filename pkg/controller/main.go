@@ -22,10 +22,10 @@ import (
 
 	"k8s.io/client-go/informers"
 
-	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
-	"github.com/bitnami-labs/sealed-secrets/pkg/client/clientset/versioned"
-	sealedsecrets "github.com/bitnami-labs/sealed-secrets/pkg/client/clientset/versioned"
-	ssinformers "github.com/bitnami-labs/sealed-secrets/pkg/client/informers/externalversions"
+	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	"github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned"
+	sealedsecrets "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned"
+	ssinformers "github.com/bitnami/sealed-secrets/pkg/client/informers/externalversions"
 )
 
 var (

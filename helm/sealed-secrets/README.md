@@ -27,7 +27,7 @@ Sealed Secrets are "one-way" encrypted K8s Secrets that can be created by anyone
 ## TL;DR
 
 ```console
-$ helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+$ helm repo add sealed-secrets https://bitnami.github.io/sealed-secrets
 $ helm install my-release sealed-secrets/sealed-secrets
 ```
 
@@ -35,7 +35,7 @@ $ helm install my-release sealed-secrets/sealed-secrets
 
 Bitnami charts for Helm are carefully engineered, actively maintained and are the quickest and easiest way to deploy containers on a Kubernetes cluster that are ready to handle production workloads.
 
-This chart bootstraps a [Sealed Secret Controller](https://github.com/bitnami-labs/sealed-secrets) Deployment in [Kubernetes](http://kubernetes.io) using the [Helm](https://helm.sh) package manager.
+This chart bootstraps a [Sealed Secret Controller](https://github.com/bitnami/sealed-secrets) Deployment in [Kubernetes](http://kubernetes.io) using the [Helm](https://helm.sh) package manager.
 
 Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for the deployment and management of Helm Charts in clusters.
 
@@ -253,7 +253,7 @@ helm install my-release -f values.yaml sealed-secrets/sealed-secrets
 
 ## Using kubeseal
 
-Install the kubeseal CLI by downloading the binary from [sealed-secrets/releases](https://github.com/bitnami-labs/sealed-secrets/releases).
+Install the kubeseal CLI by downloading the binary from [sealed-secrets/releases](https://github.com/bitnami/sealed-secrets/releases).
 
 Fetch the public key by passing the release name and namespace:
 
@@ -264,7 +264,7 @@ kubeseal --fetch-cert \
 > pub-cert.pem
 ```
 
-Read about kubeseal usage on [sealed-secrets docs](https://github.com/bitnami-labs/sealed-secrets#usage).
+Read about kubeseal usage on [sealed-secrets docs](https://github.com/bitnami/sealed-secrets#usage).
 
 NOTE: the helm chart by default installs the controller with the name `sealed-secrets`, while the `kubeseal` command line interface (CLI) tries to access the controller with the name `sealed-secrets-controller`. You can explicitly pass `--controller-name` to the CLI:
 

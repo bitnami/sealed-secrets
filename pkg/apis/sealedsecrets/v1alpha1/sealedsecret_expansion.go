@@ -17,7 +17,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/mkmik/multierror"
 
-	"github.com/bitnami-labs/sealed-secrets/pkg/crypto"
+	"github.com/bitnami/sealed-secrets/pkg/crypto"
 )
 
 const (
@@ -231,7 +231,7 @@ func NewSealedSecret(codecs runtimeserializer.CodecFactory, pubKey *rsa.PublicKe
 	// which put a copy of the object version at application time in an annotation in order to support
 	// strategic merge patch in subsequent updates. We need to strip those annotations or else we would
 	// be leaking secrets in clear in a way that might be non obvious to users.
-	// See https://github.com/bitnami-labs/sealed-secrets/issues/227
+	// See https://github.com/bitnami/sealed-secrets/issues/227
 	StripLastAppliedAnnotations(s.Spec.Template.ObjectMeta.Annotations)
 
 	// Cleanup ownerReference (See #243)

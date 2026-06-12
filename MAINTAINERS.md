@@ -17,4 +17,4 @@
 
 ---
 
-Full list of [Sealed Secrets contributors](https://github.com/bitnami-labs/sealed-secrets/graphs/contributors).
+Full list of [Sealed Secrets contributors](https://github.com/bitnami/sealed-secrets/graphs/contributors).

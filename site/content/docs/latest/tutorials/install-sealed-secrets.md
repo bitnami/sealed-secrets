@@ -23,7 +23,7 @@ The controller can be deployed using three different methods: direct yaml manife
 
 ## Installing from Manifests
 
-Sealed secrets controller manifests are available from the [releases page](https://github.com/bitnami-labs/sealed-secrets/releases). You can choose the most convenient deployment for your cluster:
+Sealed secrets controller manifests are available from the [releases page](https://github.com/bitnami/sealed-secrets/releases). You can choose the most convenient deployment for your cluster:
 
 - `controller.yaml` Is a full manifest description of all the components required for the Sealed Secrets controller to operate. This includes Cluster role permissions and CRD definitions.
 - `controller-norbac.yaml` Is a restricted version of the manifest descriptor. This version does not include CRDs nor Cluster roles.
@@ -31,7 +31,7 @@ Sealed secrets controller manifests are available from the [releases page](https
 To install the controller simply type:
 
 ```console
-$ kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/{{VERSION}}/controller.yaml
+$ kubectl apply -f https://github.com/bitnami/sealed-secrets/releases/download/{{VERSION}}/controller.yaml
 
 role.rbac.authorization.k8s.io/sealed-secrets-service-proxier created
 rolebinding.rbac.authorization.k8s.io/sealed-secrets-controller created
@@ -66,7 +66,7 @@ Please refer to the [GKE how-to](../howto/) for additional instructions on that 
 
 The Sealed Secrets [Helm chart](https://helm.sh/) is officially supported and hosted in this GitHub repository.
 ```shell
-helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+helm repo add sealed-secrets https://bitnami.github.io/sealed-secrets
 helm install sealed-secrets-controller sealed-secrets/sealed-secrets \
 --set namespace=kube-system \
 ```
@@ -93,7 +93,7 @@ It is also possible to install Sealed Secrets as a [Carvel package](https://carv
 ```console
 $ kapp deploy -a kc -f https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml
 
-$ kapp deploy -a sealed-secrets-carvel -f https://raw.githubusercontent.com/bitnami-labs/sealed-secrets/main/carvel/package.yaml
+$ kapp deploy -a sealed-secrets-carvel -f https://raw.githubusercontent.com/bitnami/sealed-secrets/main/carvel/package.yaml
 Changes
 
 Namespace  Name                              Kind     Conds.  Age  Op      Op st.  Wait to    Rs  Ri

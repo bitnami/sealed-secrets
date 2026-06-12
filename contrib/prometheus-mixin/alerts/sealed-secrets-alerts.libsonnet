@@ -25,7 +25,7 @@
           annotations: {
             summary: 'Sealed Secrets Unseal Error High',
             description: 'High number of errors during unsealing Sealed Secrets in {{ $labels.namespace }} namespace.',
-            runbook_url: 'https://github.com/bitnami-labs/sealed-secrets',
+            runbook_url: 'https://github.com/bitnami/sealed-secrets',
           },
         },
       ],

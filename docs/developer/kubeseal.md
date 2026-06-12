@@ -5,7 +5,7 @@ Kubeseal component is a CLI tool that uses asymmetric crypto to encrypt secrets 
 ## Download the Kubeseal source code
 
 ```bash
-git clone https://github.com/bitnami-labs/sealed-secrets.git $SEALED_SECRETS_DIR
+git clone https://github.com/bitnami/sealed-secrets.git $SEALED_SECRETS_DIR
 ```
 
 The kubeseal sources are located under `cmd/kubeseal/` and use packages from the `pkg` directory.

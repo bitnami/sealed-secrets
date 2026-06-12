@@ -9,7 +9,7 @@ import (
 
 	goflag "flag"
 
-	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
 	"github.com/google/renameio"
 	"github.com/mattn/go-isatty"
 	flag "github.com/spf13/pflag"
@@ -18,10 +18,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 
-	"github.com/bitnami-labs/sealed-secrets/pkg/buildinfo"
-	"github.com/bitnami-labs/sealed-secrets/pkg/flagenv"
-	"github.com/bitnami-labs/sealed-secrets/pkg/kubeseal"
-	"github.com/bitnami-labs/sealed-secrets/pkg/pflagenv"
+	"github.com/bitnami/sealed-secrets/pkg/buildinfo"
+	"github.com/bitnami/sealed-secrets/pkg/flagenv"
+	"github.com/bitnami/sealed-secrets/pkg/kubeseal"
+	"github.com/bitnami/sealed-secrets/pkg/pflagenv"
 
 	// Register Auth providers.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"

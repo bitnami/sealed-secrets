@@ -18,7 +18,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	"github.com/bitnami-labs/sealed-secrets/pkg/crypto"
+	"github.com/bitnami/sealed-secrets/pkg/crypto"
 
 	// Install standard API types.
 	_ "k8s.io/client-go/kubernetes"

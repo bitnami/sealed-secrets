@@ -1,13 +1,13 @@
 # "Sealed Secrets" for Kubernetes
 
 [![](https://img.shields.io/badge/install-docs-brightgreen.svg)](#Installation)
-[![](https://img.shields.io/github/release/bitnami-labs/sealed-secrets.svg)](https://github.com/bitnami-labs/sealed-secrets/releases/latest)
+[![](https://img.shields.io/github/release/bitnami/sealed-secrets.svg)](https://github.com/bitnami/sealed-secrets/releases/latest)
 [![](https://img.shields.io/homebrew/v/kubeseal)](https://formulae.brew.sh/formula/kubeseal)
-[![Build Status](https://github.com/bitnami-labs/sealed-secrets/actions/workflows/ci.yml/badge.svg)](https://github.com/bitnami-labs/sealed-secrets/actions/workflows/ci.yml)
-[![](https://img.shields.io/github/v/release/bitnami-labs/sealed-secrets?include_prereleases&label=helm&sort=semver)](https://github.com/bitnami-labs/sealed-secrets/releases)
+[![Build Status](https://github.com/bitnami/sealed-secrets/actions/workflows/ci.yml/badge.svg)](https://github.com/bitnami/sealed-secrets/actions/workflows/ci.yml)
+[![](https://img.shields.io/github/v/release/bitnami/sealed-secrets?include_prereleases&label=helm&sort=semver)](https://github.com/bitnami/sealed-secrets/releases)
 [![Download Status](https://img.shields.io/docker/pulls/bitnami/sealed-secrets-controller.svg)](https://hub.docker.com/r/bitnami/sealed-secrets-controller)
-[![Go Report Card](https://goreportcard.com/badge/github.com/bitnami-labs/sealed-secrets)](https://goreportcard.com/report/github.com/bitnami-labs/sealed-secrets)
-![Downloads](https://img.shields.io/github/downloads/bitnami-labs/sealed-secrets/total.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bitnami/sealed-secrets)](https://goreportcard.com/report/github.com/bitnami/sealed-secrets)
+![Downloads](https://img.shields.io/github/downloads/bitnami/sealed-secrets/total.svg)
 
 **Problem:** "I can manage all my K8s config in git, except Secrets."
 
@@ -263,7 +263,7 @@ The lack of any of such annotations means `strict` mode. If both are set, `clust
 
 ## Installation
 
-See https://github.com/bitnami-labs/sealed-secrets/releases for the latest release and detailed installation instructions.
+See https://github.com/bitnami/sealed-secrets/releases for the latest release and detailed installation instructions.
 
 Cloud platform specific notes and instructions:
 
@@ -301,7 +301,7 @@ In some cases you might need to apply your own customizations, like set a custom
 The Sealed Secrets helm chart is now officially supported and hosted in this GitHub repo.
 
 ```bash
-helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+helm repo add sealed-secrets https://bitnami.github.io/sealed-secrets
 ```
 
 > NOTE: The versioning scheme of the helm chart differs from the versioning scheme of the sealed secrets project itself.
@@ -392,7 +392,7 @@ port install kubeseal
 
 #### Nixpkgs
 
-The `kubeseal` client is also available on [Nixpkgs](https://search.nixos.org/packages?channel=unstable&show=kubeseal&from=0&size=50&sort=relevance&type=packages&query=kubeseal): (**DISCLAIMER**: Not maintained by bitnami-labs)
+The `kubeseal` client is also available on [Nixpkgs](https://search.nixos.org/packages?channel=unstable&show=kubeseal&from=0&size=50&sort=relevance&type=packages&query=kubeseal): (**DISCLAIMER**: Not maintained by bitnami)
 
 ```bash
 nix-env -iA nixpkgs.kubeseal
@@ -404,7 +404,7 @@ The `kubeseal` client can be installed on Linux, using the below commands:
 
 ```bash
 KUBESEAL_VERSION='' # Set this to, for example, KUBESEAL_VERSION='0.23.0'
-curl -OL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION:?}/kubeseal-${KUBESEAL_VERSION:?}-linux-amd64.tar.gz"
+curl -OL "https://github.com/bitnami/sealed-secrets/releases/download/v${KUBESEAL_VERSION:?}/kubeseal-${KUBESEAL_VERSION:?}-linux-amd64.tar.gz"
 tar -xvzf kubeseal-${KUBESEAL_VERSION:?}-linux-amd64.tar.gz kubeseal
 sudo install -m 755 kubeseal /usr/local/bin/kubeseal
 ```
@@ -413,7 +413,7 @@ If you have `curl` and `jq` installed on your machine, you can get the version d
 
 ```
 # Fetch the latest sealed-secrets version using GitHub API
-KUBESEAL_VERSION=$(curl -s https://api.github.com/repos/bitnami-labs/sealed-secrets/tags | jq -r '.[0].name' | cut -c 2-)
+KUBESEAL_VERSION=$(curl -s https://api.github.com/repos/bitnami/sealed-secrets/tags | jq -r '.[0].name' | cut -c 2-)
 
 # Check if the version was fetched successfully
 if [ -z "$KUBESEAL_VERSION" ]; then
@@ -421,12 +421,12 @@ if [ -z "$KUBESEAL_VERSION" ]; then
     exit 1
 fi
 
-curl -OL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz"
+curl -OL "https://github.com/bitnami/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz"
 tar -xvzf kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz kubeseal
 sudo install -m 755 kubeseal /usr/local/bin/kubeseal
 ```
 
-where `KUBESEAL_VERSION` is the [version tag](https://github.com/bitnami-labs/sealed-secrets/tags) of the kubeseal release you want to use. For example: `v0.18.0`.
+where `KUBESEAL_VERSION` is the [version tag](https://github.com/bitnami/sealed-secrets/tags) of the kubeseal release you want to use. For example: `v0.18.0`.
 
 #### Installation from source
 
@@ -434,7 +434,7 @@ If you just want the latest client tool, it can be installed into
 `$GOPATH/bin` with:
 
 ```bash
-go install github.com/bitnami-labs/sealed-secrets/cmd/kubeseal@main
+go install github.com/bitnami/sealed-secrets/cmd/kubeseal@main
 ```
 
 You can specify a release tag or a commit SHA instead of `main`.
@@ -835,7 +835,7 @@ kubeseal <mysecret.json >mysealedsecret.json
 
 ### How to verify the images?
 
-Our images are being signed using [cosign](https://github.com/sigstore/cosign). The signatures have been saved in our [GitHub Container Registry](https://ghcr.io/bitnami-labs/sealed-secrets-controller/signs).
+Our images are being signed using [cosign](https://github.com/sigstore/cosign). The signatures have been saved in our [GitHub Container Registry](https://ghcr.io/bitnami/sealed-secrets-controller/signs).
 
 > Images up to and including v0.20.2 were signed using Cosign v1. Newer images are signed with Cosign v2.
 
@@ -843,10 +843,10 @@ It is pretty simple to verify the images:
 
 ```bash
 # export the COSIGN_VARIABLE setting up the GitHub container registry signs path
-export COSIGN_REPOSITORY=ghcr.io/bitnami-labs/sealed-secrets-controller/signs
+export COSIGN_REPOSITORY=ghcr.io/bitnami/sealed-secrets-controller/signs
 
 # verify the image uploaded in GHCR
-cosign verify --key .github/workflows/cosign.pub ghcr.io/bitnami-labs/sealed-secrets-controller:latest
+cosign verify --key .github/workflows/cosign.pub ghcr.io/bitnami/sealed-secrets-controller:latest
 
 # verify the image uploaded in Dockerhub
 cosign verify --key .github/workflows/cosign.pub docker.io/bitnami/sealed-secrets-controller:latest

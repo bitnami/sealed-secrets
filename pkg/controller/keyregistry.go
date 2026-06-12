@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bitnami-labs/sealed-secrets/pkg/crypto"
+	"github.com/bitnami/sealed-secrets/pkg/crypto"
 	"k8s.io/client-go/kubernetes"
 	certUtil "k8s.io/client-go/util/cert"
 )
