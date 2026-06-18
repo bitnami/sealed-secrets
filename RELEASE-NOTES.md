@@ -4,6 +4,22 @@ Latest release:
 
 [![](https://img.shields.io/github/release/bitnami/sealed-secrets.svg)](https://github.com/bitnami/sealed-secrets/releases/latest)
 
+## v0.38.0
+
+- feat: add ppc64le architecture support ([#1973](https://github.com/bitnami/sealed-secrets/pull/1973))
+- Adding default prometheusRule in helmChart to watch out of sync secrets ([#1980](https://github.com/bitnami/sealed-secrets/pull/1980))
+- Update security context defaults to comply with restricted pod security standard profile ([#1981](https://github.com/bitnami/sealed-secrets/pull/1981))
+- fix: add mutex locking to KeyRegistry to prevent data races ([#1905](https://github.com/bitnami/sealed-secrets/pull/1905))
+- Bump Golang to 1.26.4 ([#1987](https://github.com/bitnami/sealed-secrets/pull/1987))
+- Migrate all bitnami-labs references to bitnami org ([#1983](https://github.com/bitnami/sealed-secrets/pull/1983))
+- Change oci registry for publishing the chart ([#1970](https://github.com/bitnami/sealed-secrets/pull/1970))
+- Revert "Fix oci push" ([#1979](https://github.com/bitnami/sealed-secrets/pull/1979))
+- Bump golang.org/x/crypto from 0.52.0 to 0.53.0 ([#1984](https://github.com/bitnami/sealed-secrets/pull/1984))
+- Bump github.com/onsi/ginkgo/v2 from 2.29.0 to 2.30.0 ([#1985](https://github.com/bitnami/sealed-secrets/pull/1985))
+- Bump golang.org/x/crypto from 0.51.0 to 0.52.0 ([#1977](https://github.com/bitnami/sealed-secrets/pull/1977))
+- Bump github.com/onsi/ginkgo/v2 from 2.28.3 to 2.29.0 ([#1976](https://github.com/bitnami/sealed-secrets/pull/1976))
+- Bump github.com/onsi/gomega from 1.40.0 to 1.41.0 ([#1975](https://github.com/bitnami/sealed-secrets/pull/1975))
+
 ## v0.37.0
 
 - Expose plaintext template.data values in template rendering context ([#1940](https://github.com/bitnami-labs/sealed-secrets/pull/1940))
