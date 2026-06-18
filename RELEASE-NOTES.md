@@ -4,6 +4,9 @@ Latest release:
 
 [![](https://img.shields.io/github/release/bitnami/sealed-secrets.svg)](https://github.com/bitnami/sealed-secrets/releases/latest)
 
+## v0.38.1
+- Incomplete release for credentials problems
+
 ## v0.38.0
 
 - feat: add ppc64le architecture support ([#1973](https://github.com/bitnami/sealed-secrets/pull/1973))
