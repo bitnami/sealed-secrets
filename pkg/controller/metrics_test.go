@@ -230,3 +230,33 @@ func getLabel(labels []*dto.LabelPair, name string) string {
 	}
 	return ""
 }
+
+func TestObserveConditionRespectsOmitSecretLabels(t *testing.T) {
+	registry := setupTestMetrics()
+	SetMetricsOmitSecretLabels(true)
+	t.Cleanup(func() { SetMetricsOmitSecretLabels(false) })
+
+	ssecret := &ssv1alpha1.SealedSecret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "test-ns",
+			Name:      "test-secret",
+		},
+		Status: &ssv1alpha1.SealedSecretStatus{
+			Conditions: []ssv1alpha1.SealedSecretCondition{
+				{Type: ssv1alpha1.SealedSecretSynced, Status: corev1.ConditionTrue},
+			},
+		},
+	}
+
+	ObserveCondition(ssecret)
+
+	metricFamilies, err := registry.Gather()
+	if err != nil {
+		t.Fatalf("Failed to gather metrics: %v", err)
+	}
+	for _, mf := range metricFamilies {
+		if mf.GetName() == "sealed_secrets_controller_condition_info" && len(mf.GetMetric()) > 0 {
+			t.Errorf("Expected condition_info to be empty when omit flag is on, got %d series", len(mf.GetMetric()))
+		}
+	}
+}

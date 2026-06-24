@@ -13,6 +13,17 @@ import (
 // Define Prometheus Exporter namespace (prefix) for all metric names.
 const metricNamespace string = "sealed_secrets_controller"
 
+// metricsOmitSecretLabels controls whether ObserveCondition and
+// UnregisterCondition emit per-SealedSecret labels on condition_info.
+// When true the gauge is not updated at all, so the metrics endpoint
+// no longer exposes an inventory of SealedSecret namespaces and names
+// to anyone who can reach :8081.
+var metricsOmitSecretLabels bool
+
+// SetMetricsOmitSecretLabels wires the controller flag into the metrics
+// package. Called once from controller.Main before registerMetrics.
+func SetMetricsOmitSecretLabels(b bool) { metricsOmitSecretLabels = b }
+
 const (
 	labelNamespace = "namespace"
 	labelName      = "name"
@@ -98,6 +109,9 @@ func registerMetrics(version string) {
 
 // ObserveCondition sets a `condition_info` Gauge according to a SealedSecret status.
 func ObserveCondition(ssecret *v1alpha1.SealedSecret) {
+	if metricsOmitSecretLabels {
+		return
+	}
 	if ssecret.Status == nil {
 		return
 	}
@@ -113,6 +127,9 @@ func ObserveCondition(ssecret *v1alpha1.SealedSecret) {
 
 // UnregisterCondition unregisters Gauges associated to a SealedSecret conditions.
 func UnregisterCondition(ssecret *v1alpha1.SealedSecret) {
+	if metricsOmitSecretLabels {
+		return
+	}
 	if ssecret.Status == nil {
 		return
 	}
