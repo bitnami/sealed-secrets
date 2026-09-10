@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/x509"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -108,6 +109,10 @@ func registryNewKeyWithSecret(secret *v1.Secret, keyRegistry *KeyRegistry, keyOr
 	key, certs, err := readKey(secret)
 	if err != nil {
 		slog.Error("Error reading key", "secret", secret.Name, "error", err)
+		return err
+	}
+	if len(certs) == 0 {
+		return fmt.Errorf("no certificates found in secret %s", secret.Name)
 	}
 
 	// Select ordering time based on the keyOrderPriority flag

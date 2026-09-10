@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"testing"
@@ -12,15 +13,18 @@ import (
 	"encoding/json"
 
 	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
+	ssfake "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned/fake"
+	"github.com/bitnami/sealed-secrets/pkg/crypto"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
-
-	ssfake "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned/fake"
+	ktesting "k8s.io/client-go/testing"
+	"k8s.io/client-go/tools/cache"
 )
 
 func someStr(s string) *string {
@@ -544,5 +548,105 @@ func TestRotateIgnoresTemplate(t *testing.T) {
 	}
 	if _, err := controller.Rotate(data2); err != nil {
 		t.Errorf("Rotate must not turn template execution into a decryption oracle, got error: %v", err)
+	}
+}
+
+func TestWatchKeySecretsDynamicDetection(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	clientset := fake.NewClientset()
+	var nameSeq int
+	clientset.PrependReactor("create", "secrets", func(action ktesting.Action) (bool, runtime.Object, error) {
+		ca, ok := action.(ktesting.CreateAction)
+		if !ok {
+			return false, nil, nil
+		}
+		sec, ok := ca.GetObject().(*corev1.Secret)
+		if ok && sec.Name == "" && sec.GenerateName != "" {
+			nameSeq++
+			sec.Name = fmt.Sprintf("%s%d", sec.GenerateName, nameSeq)
+		}
+		return false, nil, nil
+	})
+	keyRegistry := NewKeyRegistry(clientset, "ns", "prefix", SealedSecretsKeyLabel, 2048)
+
+	informerFactory := informers.NewSharedInformerFactory(clientset, 0)
+	kInformer, err := watchKeySecrets(informerFactory, keyRegistry, "CertNotBefore")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	go kInformer.Run(stopCh)
+
+	if !cache.WaitForCacheSync(stopCh, kInformer.HasSynced) {
+		t.Fatal("timed out waiting for informer to sync")
+	}
+
+	// 1. Generate key and write secret
+	key1, cert1, err := generatePrivateKeyAndCert(2048, time.Hour, "cn1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	secName1, err := writeKey(ctx, clientset, key1, []*x509.Certificate{cert1}, "ns", SealedSecretsKeyLabel, "prefix-", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for informer to pick it up
+	var latest *rsa.PrivateKey
+	for i := 0; i < 20; i++ {
+		latest, err = keyRegistry.latestPrivateKey()
+		if err == nil && latest != nil && latest.Equal(key1) {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if latest == nil || !latest.Equal(key1) {
+		t.Fatalf("expected keyRegistry to pick up newly added key secret %s", secName1)
+	}
+
+	// 2. Add second newer key via secret update/add
+	key2, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cert2, err := crypto.SignKeyWithNotBefore(rand.Reader, key2, time.Now().Add(time.Minute), time.Hour, "cn2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	secName2, err := writeKey(ctx, clientset, key2, []*x509.Certificate{cert2}, "ns", SealedSecretsKeyLabel, "prefix-", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < 20; i++ {
+		latest, err = keyRegistry.latestPrivateKey()
+		if err == nil && latest != nil && latest.Equal(key2) {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if latest == nil || !latest.Equal(key2) {
+		t.Fatalf("expected keyRegistry to pick up updated key secret %s", secName2)
+	}
+
+	// 3. Delete key2 secret -> should unregister key2 and fallback to key1
+	err = clientset.CoreV1().Secrets("ns").Delete(ctx, secName2, metav1.DeleteOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < 20; i++ {
+		latest, err = keyRegistry.latestPrivateKey()
+		if err == nil && latest != nil && latest.Equal(key1) {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if latest == nil || !latest.Equal(key1) {
+		t.Fatalf("expected keyRegistry to fallback to key1 after key2 deletion, got: %v", latest)
 	}
 }
