@@ -3,6 +3,7 @@ package controller
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"io"
 	"log"
 	"log/slog"
@@ -23,6 +24,33 @@ var (
 	readTimeout       = flag.Duration("read-timeout", 2*time.Minute, "HTTP request timeout.")
 	writeTimeout      = flag.Duration("write-timeout", 2*time.Minute, "HTTP response timeout.")
 )
+
+// maxRequestBodyBytes caps the body accepted by /v1/verify and /v1/rotate,
+// which is read fully into memory before rate limiting or crypto runs.
+// 10 MiB stays well above etcd's ~1.5 MiB object size limit (so no legitimate
+// SealedSecret is rejected) while bounding the memory an unauthenticated
+// caller can force the process to allocate per request.
+const maxRequestBodyBytes = 10 * 1024 * 1024
+
+// readLimitedBody reads r.Body up to maxRequestBodyBytes, writing an
+// appropriate status code (413 if the cap was exceeded, 400 for any other
+// read error) and returning ok=false if the read failed.
+func readLimitedBody(w http.ResponseWriter, r *http.Request, logMsg string) (content []byte, ok bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyBytes)
+	content, err := io.ReadAll(r.Body)
+	if err != nil {
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			slog.Error(logMsg, "error", err)
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			return nil, false
+		}
+		slog.Error(logMsg, "error", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return nil, false
+	}
+	return content, true
+}
 
 // Called on every request to /cert.  Errors will be logged and return a 500.
 type certProvider func() ([]*x509.Certificate, error)
@@ -69,10 +97,8 @@ func httpserver(cp certProvider, sc secretChecker, sr secretRotator, burst int, 
 	})
 
 	mux.Handle("/v1/verify", Instrument("/v1/verify", httpRateLimiter.RateLimit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		content, err := io.ReadAll(r.Body)
-		if err != nil {
-			slog.Error("Error handling /v1/verify request", "error", err)
-			w.WriteHeader(http.StatusBadRequest)
+		content, ok := readLimitedBody(w, r, "Error handling /v1/verify request")
+		if !ok {
 			return
 		}
 
@@ -92,10 +118,8 @@ func httpserver(cp certProvider, sc secretChecker, sr secretRotator, burst int, 
 
 	// TODO(mkm): rename to re-encrypt
 	mux.Handle("/v1/rotate", Instrument("/v1/rotate", httpRateLimiter.RateLimit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		content, err := io.ReadAll(r.Body)
-		if err != nil {
-			slog.Error("Error handling /v1/rotate request", "error", err)
-			w.WriteHeader(http.StatusBadRequest)
+		content, ok := readLimitedBody(w, r, "Error handling /v1/rotate request")
+		if !ok {
 			return
 		}
 

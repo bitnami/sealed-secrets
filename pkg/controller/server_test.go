@@ -120,6 +120,29 @@ func TestHttpCert(t *testing.T) {
 	check(certAfter)
 }
 
+func TestHttpVerifyRejectsOversizedBody(t *testing.T) {
+	sc := func([]byte) (bool, error) { return true, nil }
+	server := httpserver(nil, sc, nil, 2, 2, nil)
+	defer shutdownServer(server, t)
+
+	hp := *listenAddr
+	if strings.HasPrefix(hp, ":") {
+		hp = fmt.Sprintf("localhost%s", hp)
+	}
+	waitForServer(t, hp)
+
+	oversized := strings.NewReader(strings.Repeat("a", maxRequestBodyBytes+1))
+	resp, err := http.Post(fmt.Sprintf("http://%s/v1/verify", hp), "application/json", oversized)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if got, want := resp.StatusCode, http.StatusRequestEntityTooLarge; got != want {
+		t.Fatalf("got: %v, want: %v", got, want)
+	}
+}
+
 func TestHttpReadyz(t *testing.T) {
 	ready := false
 	server := httpserver(func() ([]*x509.Certificate, error) {
