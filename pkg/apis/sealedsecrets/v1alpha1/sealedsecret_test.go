@@ -432,6 +432,43 @@ func TestValidateEncryptedDataIgnoresTemplate(t *testing.T) {
 	}
 }
 
+// TestUnsealWithoutTemplateIgnoresTemplate checks that UnsealWithoutTemplate never renders spec.template.data.
+func TestUnsealWithoutTemplateIgnoresTemplate(t *testing.T) {
+	secret := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "myname",
+			Namespace: "myns",
+		},
+		Data: map[string][]byte{
+			"password": []byte("hunter2"),
+		},
+	}
+
+	ssecret, _, keys := sealSecret(t, &secret, NewSealedSecret)
+
+	// This probe template must not affect decryption or leak into the output.
+	ssecret.Spec.Template.Data = map[string]*string{
+		"probe": someStr(`{{ if eq .password "hunter2" }}{{ fail "guessed it" }}{{ end }}`),
+	}
+
+	unsealed, err := ssecret.UnsealWithoutTemplate(serializer.CodecFactory{}, keys)
+	if err != nil {
+		t.Fatalf("UnsealWithoutTemplate returned error for a decryptable secret with a template: %v", err)
+	}
+	if got, want := string(unsealed.Data["password"]), "hunter2"; got != want {
+		t.Errorf("password: got %q, want %q", got, want)
+	}
+	if _, ok := unsealed.Data["probe"]; ok {
+		t.Errorf("UnsealWithoutTemplate must not render spec.template.data, but found rendered key %q", "probe")
+	}
+
+	// Sanity check: genuinely undecryptable data must still fail.
+	_, otherKeys := generateTestKey(t, testRand(), 2048)
+	if _, err := ssecret.UnsealWithoutTemplate(serializer.CodecFactory{}, otherKeys); err == nil {
+		t.Errorf("UnsealWithoutTemplate did not return an error for encryptedData undecryptable with the given keys")
+	}
+}
+
 // TestTemplateDataPlaintextReference verifies that plaintext keys defined
 // in spec.template.data can be referenced from sibling templates as
 // {{ .key }} variables. Regression test for

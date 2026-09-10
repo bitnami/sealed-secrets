@@ -574,7 +574,7 @@ func (c *Controller) Rotate(content []byte) ([]byte, error) {
 			slog.Warn("Sealed Secret metadata doesn't match. Please align your Sealed Secret metadata")
 		}
 
-		secret, err := c.attemptUnseal(s)
+		secret, err := c.attemptUnsealForRotate(s)
 		if err != nil {
 			return nil, fmt.Errorf("error decrypting secret. %v", err)
 		}
@@ -602,4 +602,9 @@ func (c *Controller) attemptUnseal(ss *ssv1alpha1.SealedSecret) (*corev1.Secret,
 
 func attemptUnseal(ss *ssv1alpha1.SealedSecret, keyRegistry *KeyRegistry) (*corev1.Secret, error) {
 	return ss.Unseal(scheme.Codecs, keyRegistry.privateKeys())
+}
+
+// attemptUnsealForRotate decrypts without rendering the template, since /v1/rotate is unauthenticated and the template could be used as a decryption oracle.
+func (c *Controller) attemptUnsealForRotate(ss *ssv1alpha1.SealedSecret) (*corev1.Secret, error) {
+	return ss.UnsealWithoutTemplate(scheme.Codecs, c.keyRegistry.privateKeys())
 }

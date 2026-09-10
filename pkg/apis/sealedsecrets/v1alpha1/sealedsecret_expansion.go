@@ -292,8 +292,17 @@ func (s *SealedSecret) ValidateEncryptedData(privKeys map[string]*rsa.PrivateKey
 	return fmt.Errorf("using deprecated 'data' field, use 'encryptedData' or flip the feature flag")
 }
 
-// Unseal decrypts and returns the embedded v1.Secret.
+// Unseal decrypts and returns the embedded v1.Secret, rendering spec.template.data as a Go template.
 func (s *SealedSecret) Unseal(codecs runtimeserializer.CodecFactory, privKeys map[string]*rsa.PrivateKey) (*v1.Secret, error) {
+	return s.unseal(codecs, privKeys, true)
+}
+
+// UnsealWithoutTemplate is like Unseal but skips rendering spec.template.data, since it's not authenticated and could be used as a decryption oracle.
+func (s *SealedSecret) UnsealWithoutTemplate(codecs runtimeserializer.CodecFactory, privKeys map[string]*rsa.PrivateKey) (*v1.Secret, error) {
+	return s.unseal(codecs, privKeys, false)
+}
+
+func (s *SealedSecret) unseal(codecs runtimeserializer.CodecFactory, privKeys map[string]*rsa.PrivateKey, renderTemplate bool) (*v1.Secret, error) {
 	boolTrue := true
 	smeta := s.GetObjectMeta()
 
@@ -328,41 +337,43 @@ func (s *SealedSecret) Unseal(codecs runtimeserializer.CodecFactory, privKeys ma
 			data[key] = string(plaintext)
 		}
 
-		// Expose raw plaintext values from spec.template.data in the
-		// template rendering context, so that templates defined in
-		// spec.template.data can reference sibling plaintext keys as
-		// {{ .key }} variables (e.g. {{ .username }} alongside an
-		// encrypted password). Encrypted values take precedence on key
-		// collision so adding a plaintext key can never silently shadow
-		// a real secret value.
-		// See https://github.com/bitnami-labs/sealed-secrets/issues/1607
-		for key, value := range s.Spec.Template.Data {
-			if _, exists := data[key]; !exists && value != nil {
-				data[key] = *value
+		if renderTemplate {
+			// Expose raw plaintext values from spec.template.data in the
+			// template rendering context, so that templates defined in
+			// spec.template.data can reference sibling plaintext keys as
+			// {{ .key }} variables (e.g. {{ .username }} alongside an
+			// encrypted password). Encrypted values take precedence on key
+			// collision so adding a plaintext key can never silently shadow
+			// a real secret value.
+			// See https://github.com/bitnami-labs/sealed-secrets/issues/1607
+			for key, value := range s.Spec.Template.Data {
+				if _, exists := data[key]; !exists && value != nil {
+					data[key] = *value
+				}
 			}
-		}
 
-		for key, value := range s.Spec.Template.Data {
-			var plaintext bytes.Buffer
+			for key, value := range s.Spec.Template.Data {
+				var plaintext bytes.Buffer
 
-			if value == nil {
-				delete(secret.Data, key)
-				continue
-			}
-			template, err := template.New(key).Funcs(sprigFuncMap).Parse(*value)
-			if err != nil {
-				errs = append(errs, multierror.Tag(key, err))
-				continue
-			}
-			err = template.Execute(&plaintext, data)
-			if err != nil {
-				errs = append(errs, multierror.Tag(key, err))
-			}
-			// Do not overwrite a key that was already populated from
-			// encryptedData; encrypted values take precedence in the
-			// output Secret as well as in the template rendering context.
-			if _, fromEncrypted := s.Spec.EncryptedData[key]; !fromEncrypted {
-				secret.Data[key] = plaintext.Bytes()
+				if value == nil {
+					delete(secret.Data, key)
+					continue
+				}
+				template, err := template.New(key).Funcs(sprigFuncMap).Parse(*value)
+				if err != nil {
+					errs = append(errs, multierror.Tag(key, err))
+					continue
+				}
+				err = template.Execute(&plaintext, data)
+				if err != nil {
+					errs = append(errs, multierror.Tag(key, err))
+				}
+				// Do not overwrite a key that was already populated from
+				// encryptedData; encrypted values take precedence in the
+				// output Secret as well as in the template rendering context.
+				if _, fromEncrypted := s.Spec.EncryptedData[key]; !fromEncrypted {
+					secret.Data[key] = plaintext.Bytes()
+				}
 			}
 		}
 

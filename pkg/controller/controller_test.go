@@ -470,3 +470,79 @@ func TestAttemptUnsealIgnoresTemplate(t *testing.T) {
 		t.Errorf("AttemptUnseal reported a decryptable secret as invalid because of an unrelated template failure")
 	}
 }
+
+// TestRotateIgnoresTemplate checks that Rotate never executes spec.template.data as a template.
+func TestRotateIgnoresTemplate(t *testing.T) {
+	ns := "some-namespace"
+	keyNs := "some-key-namespace"
+	var tweakopts func(*metav1.ListOptions)
+	clientset := fake.NewClientset()
+	ssc := ssfake.NewSimpleClientset()
+	keyRegistry := testKeyRegister(t, context.Background(), clientset, ns)
+
+	validFor := time.Hour
+	cn := "my-cn"
+	_, err := keyRegistry.generateKey(context.Background(), validFor, cn, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	controller, err := prepareController(clientset, ns, keyNs, tweakopts, &Flags{SkipRecreate: false}, ssc, keyRegistry)
+	if err != nil {
+		t.Fatalf("err %v want %v", err, nil)
+	}
+
+	secret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ss",
+			Namespace: "default",
+		},
+		Data: map[string][]byte{
+			"password": []byte("hunter2"),
+		},
+	}
+
+	cert, err := controller.keyRegistry.getCert()
+	if err != nil {
+		t.Fatalf("error getting certificate: %v", err)
+	}
+
+	ssecret, err := ssv1alpha1.NewSealedSecret(scheme.Codecs, cert.PublicKey.(*rsa.PublicKey), secret)
+	if err != nil {
+		t.Fatalf("error creating sealed secrets: %v", err)
+	}
+
+	// Attacker-controlled, always-failing template paired with the victim's real data.
+	ssecret.Spec.Template.Data = map[string]*string{
+		"probe": someStr(`{{ fail "attacker-controlled failure" }}`),
+	}
+
+	enc, err := prettyEncoder(scheme.Codecs, runtime.ContentTypeJSON, ssv1alpha1.SchemeGroupVersion)
+	if err != nil {
+		t.Fatalf("unexpected pretty encoding: %v", err)
+	}
+	data, err := runtime.Encode(enc, ssecret)
+	if err != nil {
+		t.Fatalf("unexpected encoding the sealed secret: %v", err)
+	}
+
+	if _, err := controller.Rotate(data); err != nil {
+		t.Errorf("Rotate returned error for a decryptable secret because of an unrelated template failure: %v", err)
+	}
+
+	// Different guesses against the same ciphertext must behave identically.
+	ssecret.Spec.Template.Data = map[string]*string{
+		"probe": someStr(`{{ if eq .password "hunter2" }}{{ fail "guessed it" }}{{ end }}`),
+	}
+	data2, err := runtime.Encode(enc, ssecret)
+	if err != nil {
+		t.Fatalf("unexpected encoding the sealed secret: %v", err)
+	}
+	if _, err := controller.Rotate(data2); err != nil {
+		t.Errorf("Rotate must not turn template execution into a decryption oracle, got error: %v", err)
+	}
+}
