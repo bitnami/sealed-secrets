@@ -4,6 +4,22 @@ Latest release:
 
 [![](https://img.shields.io/github/release/bitnami/sealed-secrets.svg)](https://github.com/bitnami/sealed-secrets/releases/latest)
 
+## v0.40.0
+
+- Bump Golang to 1.26.8 ([#2050](https://github.com/bitnami/sealed-secrets/pull/2050))
+- [Security] Stop /v1/rotate from acting as a decryption oracle ([#2049](https://github.com/bitnami/sealed-secrets/pull/2049))
+- Bump golang.org/x/crypto from 0.55.0 to 0.56.0 ([#2048](https://github.com/bitnami/sealed-secrets/pull/2048))
+- Bump github.com/prometheus/client_model from 0.6.2 to 0.6.3 ([#2047](https://github.com/bitnami/sealed-secrets/pull/2047))
+- Bump github.com/onsi/gomega from 1.42.1 to 1.43.0 ([#2044](https://github.com/bitnami/sealed-secrets/pull/2044))
+- Bump k8s.io/code-generator from 0.36.4 to 0.37.0 ([#2042](https://github.com/bitnami/sealed-secrets/pull/2042))
+- Bump k8s.io/client-go from 0.36.4 to 0.37.0 ([#2041](https://github.com/bitnami/sealed-secrets/pull/2041))
+- Enable encryptedData to be omitted by setting key to null in template ([#1871](https://github.com/bitnami/sealed-secrets/pull/1871))
+- Bump k8s.io/code-generator from 0.36.3 to 0.36.4 ([#2036](https://github.com/bitnami/sealed-secrets/pull/2036))
+- Add imports to force vendoring required codegen tools ([#2020](https://github.com/bitnami/sealed-secrets/pull/2020))
+- Bump distroless/static from `9197324` to `f2ea270` in /docker ([#2038](https://github.com/bitnami/sealed-secrets/pull/2038))
+- Bump k8s.io/client-go from 0.36.3 to 0.36.4 ([#2039](https://github.com/bitnami/sealed-secrets/pull/2039))
+- Bump k8s.io/api from 0.36.3 to 0.36.4 ([#2037](https://github.com/bitnami/sealed-secrets/pull/2037))
+
 ## v0.39.1
 
 - Bump Golang to 1.26.7 ([#2029](https://github.com/bitnami/sealed-secrets/pull/2029))
