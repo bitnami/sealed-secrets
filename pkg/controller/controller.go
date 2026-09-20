@@ -238,44 +238,51 @@ func watchSecrets(sinformer informers.SharedInformerFactory, ssclientset ssclien
 	sInformer := sinformer.Core().V1().Secrets().Informer()
 	_, err := sInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: func(obj interface{}) {
-			skey, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			if err != nil {
-				slog.Error("failed to fetch Secret key", "error", err)
-				return
-			}
-
-			ns, name, err := cache.SplitMetaNamespaceKey(skey)
-			if err != nil {
-				slog.Error("failed to get namespace and name from key", "secret", skey, "error", err)
-				return
-			}
-
-			ssecret, err := ssclientset.BitnamiV1alpha1().SealedSecrets(ns).Get(context.Background(), name, metav1.GetOptions{})
-			if err != nil {
-				if !k8serrors.IsNotFound(err) {
-					slog.Error("failed to get SealedSecret", "secret", skey, "error", err)
-				}
-				return
-			}
-
-			// Requeue whether or not the controller owned the deleted Secret. A Secret
-			// sharing a SealedSecret's namespace and name but not managed by it is
-			// exactly what blocks unsealing, so its removal is the event that unblocks
-			// the SealedSecret. Unsealing is idempotent, so requeueing in the cases
-			// where the Secret was ours costs nothing.
-			sskey, err := cache.MetaNamespaceKeyFunc(ssecret)
-			if err != nil {
-				slog.Error("failed to fetch SealedSecret key", "secret", skey, "error", err)
-				return
-			}
-
-			queue.Add(sskey)
+			enqueueSealedSecretForDeletedSecret(obj, ssclientset, queue)
 		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not add event handler to secrets informer: %w", err)
 	}
 	return sInformer, nil
+}
+
+// enqueueSealedSecretForDeletedSecret requeues the SealedSecret sharing a namespace
+// and name with a deleted Secret, if such a SealedSecret exists.
+//
+// It requeues whether or not the controller owned the deleted Secret. A Secret that
+// shares a SealedSecret's namespace and name but is not managed by it is exactly what
+// blocks unsealing, so its removal is the event that unblocks the SealedSecret.
+// Unsealing is idempotent, so requeueing in the cases where the Secret was ours costs
+// nothing.
+func enqueueSealedSecretForDeletedSecret(obj interface{}, ssclientset ssclientset.Interface, queue workqueue.TypedRateLimitingInterface[string]) {
+	skey, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
+	if err != nil {
+		slog.Error("failed to fetch Secret key", "error", err)
+		return
+	}
+
+	ns, name, err := cache.SplitMetaNamespaceKey(skey)
+	if err != nil {
+		slog.Error("failed to get namespace and name from key", "secret", skey, "error", err)
+		return
+	}
+
+	ssecret, err := ssclientset.BitnamiV1alpha1().SealedSecrets(ns).Get(context.Background(), name, metav1.GetOptions{})
+	if err != nil {
+		if !k8serrors.IsNotFound(err) {
+			slog.Error("failed to get SealedSecret", "secret", skey, "error", err)
+		}
+		return
+	}
+
+	sskey, err := cache.MetaNamespaceKeyFunc(ssecret)
+	if err != nil {
+		slog.Error("failed to fetch SealedSecret key", "secret", skey, "error", err)
+		return
+	}
+
+	queue.Add(sskey)
 }
 
 // HasSynced returns true once this controller has completed an
