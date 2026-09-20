@@ -258,10 +258,11 @@ func watchSecrets(sinformer informers.SharedInformerFactory, ssclientset ssclien
 				return
 			}
 
-			if !metav1.IsControlledBy(obj.(*corev1.Secret), ssecret) && !isAnnotatedToBeManaged(obj.(*corev1.Secret)) {
-				return
-			}
-
+			// Requeue whether or not the controller owned the deleted Secret. A Secret
+			// sharing a SealedSecret's namespace and name but not managed by it is
+			// exactly what blocks unsealing, so its removal is the event that unblocks
+			// the SealedSecret. Unsealing is idempotent, so requeueing in the cases
+			// where the Secret was ours costs nothing.
 			sskey, err := cache.MetaNamespaceKeyFunc(ssecret)
 			if err != nil {
 				slog.Error("failed to fetch SealedSecret key", "secret", skey, "error", err)
