@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	ktesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/workqueue"
 )
 
 func someStr(s string) *string {
@@ -698,5 +699,88 @@ func TestWatchKeySecretsDynamicDetection(t *testing.T) {
 	}
 	if latest == nil || !latest.Equal(key1) {
 		t.Fatalf("expected keyRegistry to fallback to key1 after key2 deletion, got: %v", latest)
+	}
+}
+
+func TestEnqueueSealedSecretForDeletedSecret(t *testing.T) {
+	const (
+		ns   = "myns"
+		name = "mysecret"
+	)
+
+	ssecret := &ssv1alpha1.SealedSecret{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+	}
+
+	// A Secret the controller never created: no owner reference and no managed
+	// annotation. This is the one that blocks unsealing, and whose deletion is
+	// what unblocks the SealedSecret.
+	blocking := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+	}
+
+	managed := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   ns,
+			Annotations: map[string]string{ssv1alpha1.SealedSecretManagedAnnotation: "true"},
+		},
+	}
+
+	unrelated := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Name: "has-no-sealedsecret", Namespace: ns},
+	}
+
+	tests := []struct {
+		subTest string
+		obj     interface{}
+		want    []string
+	}{
+		{
+			subTest: "deleting a blocking Secret requeues the SealedSecret",
+			obj:     blocking,
+			want:    []string{ns + "/" + name},
+		},
+		{
+			subTest: "deleting a managed Secret still requeues it",
+			obj:     managed,
+			want:    []string{ns + "/" + name},
+		},
+		{
+			subTest: "deleting a Secret with no matching SealedSecret requeues nothing",
+			obj:     unrelated,
+			want:    nil,
+		},
+		{
+			subTest: "a tombstone is handled without panicking",
+			obj:     cache.DeletedFinalStateUnknown{Key: ns + "/" + name, Obj: blocking},
+			want:    []string{ns + "/" + name},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.subTest, func(t *testing.T) {
+			ssc := ssfake.NewSimpleClientset(ssecret)
+			queue := workqueue.NewTypedRateLimitingQueue(workqueue.DefaultTypedControllerRateLimiter[string]())
+			defer queue.ShutDown()
+
+			enqueueSealedSecretForDeletedSecret(tt.obj, ssc, queue)
+
+			var got []string
+			for queue.Len() > 0 {
+				item, _ := queue.Get()
+				got = append(got, item)
+				queue.Done(item)
+			}
+
+			if len(got) != len(tt.want) {
+				t.Fatalf("%s: queued %v, want %v", tt.subTest, got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("%s: queued %v, want %v", tt.subTest, got, tt.want)
+				}
+			}
+		})
 	}
 }
