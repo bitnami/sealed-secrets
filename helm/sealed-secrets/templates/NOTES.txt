@@ -16,7 +16,7 @@ You should now be able to create sealed secrets.
       --controller-namespace={{ include "sealed-secrets.namespace" . }} \
       --format yaml > mysealedsecret.[json|yaml]
 
-The file mysealedsecret.[json|yaml] is a commitable file.
+The file mysealedsecret.[json|yaml] is a committable file.
 
 If you would rather not need access to the cluster to generate the sealed secret you can run:
 

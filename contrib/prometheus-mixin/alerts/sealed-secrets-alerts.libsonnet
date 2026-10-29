@@ -4,7 +4,7 @@
       name: 'sealed-secrets',
       rules: [
         // SealedSecretsErrorRateHigh:
-        // Method: Alert on occurence of errors by looking for a non-zero rate of errors over past 5 minutes
+        // Method: Alert on occurrence of errors by looking for a non-zero rate of errors over past 5 minutes
         // Pros:
         // - An app deploy is likely broken if a secret can't be updated by Controller.
         // Caveats:
