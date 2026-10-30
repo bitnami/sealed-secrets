@@ -66,7 +66,7 @@ secretName: "sealed-secrets-key"
 ##
 updateStatus: true
 ## @param skipRecreate Specifies whether the Sealed Secrets controller should skip restoring removed or modified secrets
-## Setting it to true allows to optionally restore backward compatibility in low priviledge
+## Setting it to true allows to optionally restore backward compatibility in low privilege
 ## environments when old versions of the controller did not require watch permissions on secrets
 ## for secret re-creation and healing.
 ##
@@ -83,7 +83,7 @@ keyrenewperiod: ""
 ##
 keyttl: ""
 ## @param keycutofftime Specifies a date at which the controller should generate a new certificate. Useful in early key renewal scenarios.
-## Takes a date formated according to RFC1123. Can be obtained with the 'date -R' command on a unix system.
+## Takes a date formatted according to RFC1123. Can be obtained with the 'date -R' command on a unix system.
 ## e.g
 ## keycutofftime: "Mon, 14 Oct 2024 21:45:30 +0200"
 ##
@@ -403,7 +403,7 @@ networkPolicy:
   ## NetworkPolicy Egress configuration
   ##
   egress:
-    ## @param networkPolicy.egress.enabled Specifies wheter a egress is set in the NetworkPolicy
+    ## @param networkPolicy.egress.enabled Specifies whether a egress is set in the NetworkPolicy
     ##
     enabled: false
     ## @param networkPolicy.egress.kubeapiCidr Specifies the kubeapiCidr, which is the only egress allowed. If not set, kubeapiCidr will be found using Helm lookup

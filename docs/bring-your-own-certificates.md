@@ -61,7 +61,7 @@ Use your own certificate (key) by using the `--cert` flag:
 kubeseal --cert "./${PUBLICKEY}" --scope cluster-wide < mysecret.yaml | kubectl apply -f-
 ```
 
-### We can see the secret has been unsealed succesfully
+### We can see the secret has been unsealed successfully
 
 ```bash
 kubectl -n "$NAMESPACE" logs -l name=sealed-secrets-controller
