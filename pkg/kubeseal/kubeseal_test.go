@@ -755,6 +755,21 @@ func TestMergeInto(t *testing.T) {
 		checkUpdated(orig.Spec.Template.Labels, merged.Spec.Template.Labels, "foo")
 	})
 
+	t.Run("cluster-wide", func(t *testing.T) {
+		var orig bytes.Buffer
+		in := bytes.NewBuffer(mkTestSecret(t, "bar", "secret2"))
+		if err := Seal(clientConfig, outputFormat, in, &orig, scheme.Codecs, pubKey, ssv1alpha1.ClusterWideScope, false, "", ""); err != nil {
+			t.Fatal(err)
+		}
+
+		// the new item has no scope annotation; it must still be sealed
+		// cluster-wide to be decryptable inside the merged file.
+		merged := merge(t, mkTestSecret(t, "foo", "secret1"), orig.Bytes())
+		if got, want := merged.Scope(), ssv1alpha1.ClusterWideScope; got != want {
+			t.Fatalf("got scope %v, want %v", got, want)
+		}
+	})
+
 	t.Run("bad name", func(t *testing.T) {
 		// should not fail even if input has a bad secret name because the name in existing existing sealed secret
 		// should win (same for namespace).
@@ -1124,4 +1139,38 @@ func (m *mockClientConfig) ConfigAccess() clientcmd.ConfigAccess {
 
 func (m *mockClientConfig) RawConfig() (clientcmdapi.Config, error) {
 	return clientcmdapi.Config{}, nil
+}
+
+func TestSecretFromFiles(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, content string) string {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	user := write("username", "admin")
+	pass := write("pw.txt", "hunter2")
+
+	secret, err := SecretFromFiles([]string{user, "password=" + pass})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(secret.Data["username"]), "admin"; got != want {
+		t.Errorf("username: got %q, want %q", got, want)
+	}
+	if got, want := string(secret.Data["password"]), "hunter2"; got != want {
+		t.Errorf("password: got %q, want %q", got, want)
+	}
+
+	if _, err := SecretFromFiles([]string{"a=" + user, "a=" + pass}); err == nil {
+		t.Error("expected an error for a duplicate key")
+	}
+	if _, err := SecretFromFiles([]string{"bad/key=" + user}); err == nil {
+		t.Error("expected an error for an invalid key")
+	}
+	if _, err := SecretFromFiles([]string{filepath.Join(dir, "missing")}); err == nil {
+		t.Error("expected an error for a missing file")
+	}
 }

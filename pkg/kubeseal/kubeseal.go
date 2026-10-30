@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -27,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/net"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/kubernetes/scheme"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
@@ -446,6 +448,12 @@ func SealMergingInto(clientConfig ClientConfig, outputFormat string, in io.Reade
 		return err
 	}
 
+	// New items must be sealed with the scope of the file they go into,
+	// otherwise the controller cannot decrypt them.
+	if scope == ssv1alpha1.DefaultScope {
+		scope = orig.Scope()
+	}
+
 	var buf bytes.Buffer
 	if err := Seal(clientConfig, outputFormat, in, &buf, codecs, pubKey, scope, allowEmptyData, orig.Name, orig.Namespace); err != nil {
 		return err
@@ -502,6 +510,34 @@ func EncryptSecretItem(w io.Writer, secretName, ns string, data []byte, scope ss
 	}
 	fmt.Fprint(w, base64.StdEncoding.EncodeToString(out))
 	return nil
+}
+
+// SecretFromFiles builds a Secret whose items are read from the given
+// --from-file values (key=path or just path, like kubectl).
+func SecretFromFiles(fromFile []string) (*v1.Secret, error) {
+	secret := &v1.Secret{
+		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
+		Data:     map[string][]byte{},
+	}
+	for _, f := range fromFile {
+		key, filename := ParseFromFile(f)
+		if key == "" {
+			key = filepath.Base(filename)
+		}
+		if errs := validation.IsConfigMapKey(key); len(errs) > 0 {
+			return nil, fmt.Errorf("%q is not a valid key name for a Secret: %s", key, strings.Join(errs, ";"))
+		}
+		if _, ok := secret.Data[key]; ok {
+			return nil, fmt.Errorf("cannot add key %q, another key by that name already exists", key)
+		}
+		// #nosec G304 -- should open user provided file
+		data, err := os.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		secret.Data[key] = data
+	}
+	return secret, nil
 }
 
 // parseFromFile parses a value of the kubectl --from-file flag, which can optionally include an item name

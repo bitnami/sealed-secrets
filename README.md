@@ -527,6 +527,13 @@ echo -n baz | kubectl create secret generic mysecret --dry-run=client --from-fil
   | kubeseal --merge-into mysealedsecret.json
 ```
 
+With `--merge-into` you can also pass the new items with `--from-file` instead of piping a whole `Secret`.
+The name, namespace and scope are taken from the existing sealed secret:
+
+```bash
+echo -n baz | kubeseal --merge-into mysealedsecret.json --from-file=bar=/dev/stdin
+```
+
 ### Raw mode (experimental)
 
 Creating temporary Secret with the `kubectl` command, only to throw it away once piped to `kubeseal` can

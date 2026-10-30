@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -93,7 +95,7 @@ func bindFlags(f *cliFlags, fs *flag.FlagSet) {
 	fs.StringVar(&f.mergeInto, "merge-into", "", "Merge items from secret into an existing sealed secret file, updating the file in-place instead of writing to stdout.")
 	fs.BoolVar(&f.raw, "raw", false, "Encrypt a raw value passed via the --from-* flags instead of the whole secret object")
 	fs.StringVar(&f.secretName, "name", "", "Name of the sealed secret (required with --raw and default (strict) scope)")
-	fs.StringSliceVar(&f.fromFile, "from-file", nil, "(only with --raw) Secret items can be sourced from files. Pro-tip: you can use /dev/stdin to read pipe input. This flag tries to follow the same syntax as in kubectl")
+	fs.StringSliceVar(&f.fromFile, "from-file", nil, "(only with --raw or --merge-into) Secret items can be sourced from files. Pro-tip: you can use /dev/stdin to read pipe input. This flag tries to follow the same syntax as in kubectl")
 	fs.StringVar(&f.kubeconfig, "kubeconfig", "", "Path to a kube config. Only required if out-of-cluster")
 
 	fs.Var(&f.sealingScope, "scope", "Set the scope of the sealed secret: strict, namespace-wide, cluster-wide (defaults to strict). Mandatory for --raw, otherwise the 'sealedsecrets.bitnami.com/cluster-wide' and 'sealedsecrets.bitnami.com/namespace-wide' annotations on the input secret can be used to select the scope.")
@@ -135,8 +137,8 @@ func runCLI(w io.Writer, cfg *config) (err error) {
 		return nil
 	}
 
-	if len(flags.fromFile) != 0 && !flags.raw {
-		return fmt.Errorf("--from-file requires --raw")
+	if len(flags.fromFile) != 0 && !flags.raw && flags.mergeInto == "" {
+		return fmt.Errorf("--from-file requires --raw or --merge-into")
 	}
 
 	var input io.Reader = os.Stdin
@@ -150,6 +152,17 @@ func runCLI(w io.Writer, cfg *config) (err error) {
 		defer f.Close()
 
 		input = f
+	} else if len(flags.fromFile) > 0 && !flags.raw {
+		// --merge-into with --from-file: the items come from the files, not stdin.
+		secret, err := kubeseal.SecretFromFiles(flags.fromFile)
+		if err != nil {
+			return err
+		}
+		b, err := json.Marshal(secret)
+		if err != nil {
+			return err
+		}
+		input = bytes.NewReader(b)
 	} else if !flags.raw && !flags.dumpCert {
 		if isatty.IsTerminal(os.Stdin.Fd()) {
 			fmt.Fprintf(os.Stderr, "(tty detected: expecting json/yaml k8s resource in stdin)\n")

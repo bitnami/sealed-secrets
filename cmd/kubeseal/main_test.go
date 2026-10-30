@@ -19,6 +19,7 @@ import (
 	"github.com/bitnami/sealed-secrets/pkg/crypto"
 	"github.com/bitnami/sealed-secrets/pkg/kubeseal"
 	flag "github.com/spf13/pflag"
+	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -336,5 +337,62 @@ func TestRawSealErrors(t *testing.T) {
 				t.Fatalf("got: %v, want: %v", err, want)
 			}
 		})
+	}
+}
+
+func TestMergeIntoFromFile(t *testing.T) {
+	certFilename, privKeyFilename, cleanup := testingKeypairFiles(t)
+	defer cleanup()
+
+	dir := t.TempDir()
+	sealedFile := filepath.Join(dir, "sealed.json")
+	newItem := filepath.Join(dir, "new")
+	if err := os.WriteFile(newItem, []byte("s3cr3t"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// an existing cluster-wide sealed secret with one item
+	secret := `{"apiVersion":"v1","kind":"Secret","metadata":{"name":"mysecret","namespace":"myns"},"data":{"old":"b2xk"}}`
+	secretFile := filepath.Join(dir, "secret.json")
+	if err := os.WriteFile(secretFile, []byte(secret), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	seal := cliFlags{
+		certURL:        certFilename,
+		inputFileName:  secretFile,
+		outputFileName: sealedFile,
+		sealingScope:   ssv1alpha1.ClusterWideScope,
+	}
+	if err := runCLI(io.Discard, testConfig(&seal)); err != nil {
+		t.Fatal(err)
+	}
+
+	// add an item straight from a file, no Secret on stdin
+	merge := cliFlags{certURL: certFilename, mergeInto: sealedFile, fromFile: []string{"new=" + newItem}}
+	if err := runCLI(io.Discard, testConfig(&merge)); err != nil {
+		t.Fatal(err)
+	}
+
+	f, err := os.Open(sealedFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	var out bytes.Buffer
+	if err := kubeseal.UnsealSealedSecret(&out, f, []string{privKeyFilename}, "json", scheme.Codecs); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`"old": "b2xk"`, `"new": "czNjcjN0"`, `"name": "mysecret"`} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("unsealed secret does not contain %s:\n%s", want, out.String())
+		}
+	}
+}
+
+func TestFromFileRequiresRawOrMergeInto(t *testing.T) {
+	flags := cliFlags{fromFile: []string{"x"}}
+	err := runCLI(io.Discard, testConfig(&flags))
+	if err == nil || !strings.Contains(err.Error(), "--from-file requires --raw or --merge-into") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
