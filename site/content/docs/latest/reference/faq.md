@@ -59,12 +59,12 @@ SealedSecrets operate at that level, and does not care what you put in the value
 it cannot make sense of any structured configuration file you might have put in a secret and thus
 cannot help you update individual fields in it.
 
-Since this is a common problem, especially when dealing with legacy applications, we do offer an [example](docs/examples/config-template) of a possible workaround.
+Since this is a common problem, especially when dealing with legacy applications, we do offer an [example](https://github.com/bitnami/sealed-secrets/tree/main/docs/examples/config-template) of a possible workaround.
 
 ## Can I bring my own (pre-generated) certificates?
 
 Yes, you can provide the controller with your own certificates, and it will consume them.
-Please check [here](docs/bring-your-own-certificates.md) for a workaround.
+Please check [here](https://github.com/bitnami/sealed-secrets/blob/main/docs/bring-your-own-certificates.md) for a workaround.
 
 ## How to use kubeseal if the controller is not running within the `kube-system` namespace?
 

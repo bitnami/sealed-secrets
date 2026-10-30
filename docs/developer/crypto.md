@@ -188,7 +188,7 @@ Without such prerequisites in place, an RSA replacement cannot be committed upon
 
 [Syndrome Decoding Problem](https://en.wikipedia.org/wiki/Decoding_methods#Syndrome_decoding)
 
-[NIST on post-quantum algorithms](https://csrc.nist.gov/Projects/post-quantum-cryptography/round-3-submissions)
+[NIST on post-quantum algorithms](https://csrc.nist.gov/projects/post-quantum-cryptography/post-quantum-cryptography-standardization/round-3-submissions)
 
-[Quantum-Resistant Cryptography](https://arxiv.org/ftp/arxiv/papers/2112/2112.00399.pdf)
+[Quantum-Resistant Cryptography](https://arxiv.org/pdf/2112.00399)
 
