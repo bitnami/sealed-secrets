@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"time"
+	_ "time/tzdata" // embed the tz database so TZ works in minimal container images
 
 	flag "github.com/spf13/pflag"
 
