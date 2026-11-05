@@ -17,8 +17,8 @@ spec:
     matchLabels: {{- include "sealed-secrets.matchLabels" . | nindent 6 }}
   ingress:
     - ports:
-      - port: {{ .Values.service.port }}
-      - port: {{ .Values.metrics.service.port }}
+      - port: {{ .Values.containerPorts.http | default "8080" }}
+      - port: {{ .Values.containerPorts.metrics | default "8081" }}
   {{- if .Values.networkPolicy.egress.enabled }}
   egress:
     - to:
