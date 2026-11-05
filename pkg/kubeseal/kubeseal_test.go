@@ -245,6 +245,33 @@ func TestSealWithMultiDocSecrets(t *testing.T) {
 	}
 }
 
+func TestSealWithMalformedDocument(t *testing.T) {
+	key, err := ParseKey(strings.NewReader(testCert))
+	if err != nil {
+		t.Fatalf("Failed to parse key: %v", err)
+	}
+
+	s1 := mkTestSecret(t, "foo", "1", withSecretName("s1"), asYAML(true))
+	malformed := "apiVersion: v1\nkind: Secret\nmetadata:\n  name: s2\ndata: [\n"
+	input := fmt.Sprintf("%s---\n%s", s1, malformed)
+
+	clientConfig := &mockClientConfig{namespace: "testns", namespaceSet: false}
+	outbuf := bytes.Buffer{}
+	err = Seal(clientConfig, "yaml", strings.NewReader(input), &outbuf, scheme.Codecs, key, ssv1alpha1.NamespaceWideScope, false, "", "")
+	if err == nil {
+		t.Fatalf("expected an error for the malformed document, got none; output:\n%s", outbuf.String())
+	}
+}
+
+func TestReadSealedSecretsWithMalformedDocument(t *testing.T) {
+	input := "apiVersion: bitnami.com/v1alpha1\nkind: SealedSecret\nmetadata:\n  name: s1\n---\napiVersion: bitnami.com/v1alpha1\nkind: SealedSecret\nmetadata: [\n"
+
+	secrets, err := readSealedSecrets(strings.NewReader(input))
+	if err == nil {
+		t.Fatalf("expected an error for the malformed document, got %d sealed secrets", len(secrets))
+	}
+}
+
 func TestSeal(t *testing.T) {
 	key, err := ParseKey(strings.NewReader(testCert))
 	if err != nil {
