@@ -179,9 +179,11 @@ func readSecrets(r io.Reader) ([]*v1.Secret, error) {
 		if reflect.DeepEqual(sec, empty) {
 			if errors.Is(err, io.EOF) {
 				break
-			} else {
-				continue
 			}
+			if err != nil {
+				return nil, err
+			}
+			continue
 		}
 		secrets = append(secrets, &sec)
 		if err != nil && err != io.EOF {
@@ -204,9 +206,11 @@ func readSealedSecrets(r io.Reader) ([]*ssv1alpha1.SealedSecret, error) {
 		if reflect.DeepEqual(sec, empty) {
 			if errors.Is(err, io.EOF) {
 				break
-			} else {
-				continue
 			}
+			if err != nil {
+				return nil, err
+			}
+			continue
 		}
 		secrets = append(secrets, &sec)
 		if err != nil && err != io.EOF {
