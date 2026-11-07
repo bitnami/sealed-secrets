@@ -112,7 +112,9 @@ func NewController(
 
 	var kInformer cache.SharedIndexInformer
 	if kinformer != nil {
-		kInformer, err = watchKeySecrets(kinformer, keyRegistry, keyOrderPriority)
+		kInformer, err = watchKeySecrets(kinformer, keyRegistry, keyOrderPriority, func() {
+			enqueueUnsyncedSealedSecrets(ssInformer.GetIndexer(), queue)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +134,9 @@ func NewController(
 	}, nil
 }
 
-func watchKeySecrets(kinformer informers.SharedInformerFactory, registry *KeyRegistry, keyOrderPriority string) (cache.SharedIndexInformer, error) {
+// watchKeySecrets keeps the key registry in sync with the sealing key Secrets.
+// onKeyRegistered, if set, is called after a key is added or updated in the registry.
+func watchKeySecrets(kinformer informers.SharedInformerFactory, registry *KeyRegistry, keyOrderPriority string, onKeyRegistered func()) (cache.SharedIndexInformer, error) {
 	kInformer := kinformer.Core().V1().Secrets().Informer()
 	_, err := kInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -145,6 +149,9 @@ func watchKeySecrets(kinformer informers.SharedInformerFactory, registry *KeyReg
 				slog.Error("failed to register key", "secret", secret.Name, "error", err)
 				return
 			}
+			if onKeyRegistered != nil {
+				onKeyRegistered()
+			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			secret, ok := newObj.(*corev1.Secret)
@@ -155,6 +162,9 @@ func watchKeySecrets(kinformer informers.SharedInformerFactory, registry *KeyReg
 			if err != nil {
 				slog.Error("failed to register updated key", "secret", secret.Name, "error", err)
 				return
+			}
+			if onKeyRegistered != nil {
+				onKeyRegistered()
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -185,6 +195,35 @@ func watchKeySecrets(kinformer informers.SharedInformerFactory, registry *KeyReg
 		return nil, fmt.Errorf("could not add event handler to secrets informer: %w", err)
 	}
 	return kInformer, nil
+}
+
+// enqueueUnsyncedSealedSecrets queues every SealedSecret that is not known to be synced.
+// A newly registered key may be the one a SealedSecret was waiting for (for example a key
+// restored from backup), and by then the controller has usually given up retrying it.
+func enqueueUnsyncedSealedSecrets(store cache.Store, queue workqueue.TypedRateLimitingInterface[string]) {
+	for _, obj := range store.List() {
+		ssecret, ok := obj.(*ssv1alpha1.SealedSecret)
+		if !ok || isSynced(ssecret) {
+			continue
+		}
+		key, err := cache.MetaNamespaceKeyFunc(ssecret)
+		if err != nil {
+			continue
+		}
+		queue.Add(key)
+	}
+}
+
+func isSynced(ssecret *ssv1alpha1.SealedSecret) bool {
+	if ssecret.Status == nil {
+		return false
+	}
+	for _, cond := range ssecret.Status.Conditions {
+		if cond.Type == ssv1alpha1.SealedSecretSynced {
+			return cond.Status == corev1.ConditionTrue
+		}
+	}
+	return false
 }
 
 func watchSealedSecrets(ssinformer ssinformer.SharedInformerFactory, queue workqueue.TypedRateLimitingInterface[string]) (cache.SharedIndexInformer, error) {

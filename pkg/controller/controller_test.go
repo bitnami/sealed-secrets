@@ -15,6 +15,7 @@ import (
 
 	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
 	ssfake "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned/fake"
+	ssinformers "github.com/bitnami/sealed-secrets/pkg/client/informers/externalversions"
 	"github.com/bitnami/sealed-secrets/pkg/crypto"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -646,7 +647,7 @@ func TestWatchKeySecretsDynamicDetection(t *testing.T) {
 	keyRegistry := NewKeyRegistry(clientset, "ns", "prefix", SealedSecretsKeyLabel, 2048)
 
 	informerFactory := informers.NewSharedInformerFactory(clientset, 0)
-	kInformer, err := watchKeySecrets(informerFactory, keyRegistry, "CertNotBefore")
+	kInformer, err := watchKeySecrets(informerFactory, keyRegistry, "CertNotBefore", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -889,5 +890,88 @@ func TestSecretDeleteQueuesOwningSealedSecret(t *testing.T) {
 				t.Fatalf("expected 1 queued item, got %d", got)
 			}
 		})
+	}
+}
+
+// A SealedSecret that failed because its key was missing must be retried once the key
+// shows up, without waiting for a controller restart.
+func TestNewKeyRequeuesUnsyncedSealedSecrets(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	const keyNs = "kube-system"
+	key, cert, err := generatePrivateKeyAndCert(2048, time.Hour, "cn")
+	if err != nil {
+		t.Fatal(err)
+	}
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "foo"},
+		Data:       map[string][]byte{"foo": []byte("bar")},
+	}
+	ss, err := ssv1alpha1.NewSealedSecret(scheme.Codecs, &key.PublicKey, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	clientset := fake.NewClientset()
+	clientset.PrependReactor("create", "secrets", func(action ktesting.Action) (bool, runtime.Object, error) {
+		if sec, ok := action.(ktesting.CreateAction).GetObject().(*corev1.Secret); ok && sec.Name == "" {
+			sec.Name = sec.GenerateName + "1"
+		}
+		return false, nil, nil
+	})
+	ssc := ssfake.NewSimpleClientset(ss)
+	keyRegistry := NewKeyRegistry(clientset, keyNs, "prefix", SealedSecretsKeyLabel, 2048)
+
+	ssinformer := ssinformers.NewSharedInformerFactory(ssc, 0)
+	sinformer := informers.NewSharedInformerFactory(clientset, 0)
+	kinformer := informers.NewSharedInformerFactoryWithOptions(clientset, 0, informers.WithNamespace(keyNs))
+	c, err := NewController(clientset, ssc, ssinformer, sinformer, kinformer, keyRegistry, 1, "CertNotBefore")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.updateStatus = true
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	go c.Run(stopCh)
+
+	syncedStatus := func() corev1.ConditionStatus {
+		got, err := ssc.BitnamiV1alpha1().SealedSecrets("default").Get(ctx, "foo", metav1.GetOptions{})
+		if err != nil || got.Status == nil {
+			return ""
+		}
+		for _, cond := range got.Status.Conditions {
+			if cond.Type == ssv1alpha1.SealedSecretSynced {
+				return cond.Status
+			}
+		}
+		return ""
+	}
+	waitFor := func(want corev1.ConditionStatus) bool {
+		for i := 0; i < 100; i++ {
+			if syncedStatus() == want {
+				return true
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+		return false
+	}
+
+	if !waitFor(corev1.ConditionFalse) {
+		t.Fatalf("expected Synced=False while the key is missing, got %q", syncedStatus())
+	}
+	// Let the controller exhaust its retries before the key comes back.
+	time.Sleep(200 * time.Millisecond)
+
+	if _, err := writeKey(ctx, clientset, key, []*x509.Certificate{cert}, keyNs, SealedSecretsKeyLabel, "prefix", "", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	if !waitFor(corev1.ConditionTrue) {
+		t.Fatalf("expected Synced=True after the key was added, got %q", syncedStatus())
+	}
+	if _, err := clientset.CoreV1().Secrets("default").Get(ctx, "foo", metav1.GetOptions{}); err != nil {
+		t.Fatalf("expected the Secret to be created after the key was added: %v", err)
 	}
 }
