@@ -425,6 +425,9 @@ func (c *Controller) unseal(ctx context.Context, key string) (unsealErr error) {
 	if err != nil {
 		return err
 	}
+	// The status is written to this object below, so work on a copy and keep the
+	// informer cache matching what is actually stored in the API server.
+	ssecret = ssecret.DeepCopy()
 	slog.Info("Updating", "key", key)
 
 	// any exit of this function at this point will cause an update to the status subresource
@@ -433,9 +436,13 @@ func (c *Controller) unseal(ctx context.Context, key string) (unsealErr error) {
 	// statements are used to return).
 	defer func(ctx context.Context) {
 		if err := c.updateSealedSecretStatus(ctx, ssecret, unsealErr); err != nil {
-			// Non-fatal.  Log and continue.
 			slog.Error("Error updating SealedSecret status", "sealed-secret", key, "error", err)
 			unsealErrorsTotal.WithLabelValues("status", ssecret.GetNamespace()).Inc()
+			// Nothing else requeues the SealedSecret for a status-only change, so a
+			// failed write (e.g. a conflict) would leave a stale condition behind.
+			if unsealErr == nil {
+				unsealErr = fmt.Errorf("failed to update status: %w", err)
+			}
 		} else {
 			ObserveCondition(ssecret)
 		}
