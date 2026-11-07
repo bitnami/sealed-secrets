@@ -15,8 +15,10 @@ import (
 
 	ssv1alpha1 "github.com/bitnami/sealed-secrets/pkg/apis/sealedsecrets/v1alpha1"
 	ssfake "github.com/bitnami/sealed-secrets/pkg/client/clientset/versioned/fake"
+	ssinformers "github.com/bitnami/sealed-secrets/pkg/client/informers/externalversions"
 	"github.com/bitnami/sealed-secrets/pkg/crypto"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
@@ -889,5 +891,69 @@ func TestSecretDeleteQueuesOwningSealedSecret(t *testing.T) {
 				t.Fatalf("expected 1 queued item, got %d", got)
 			}
 		})
+	}
+}
+
+// A failed status write must be retried, otherwise the SealedSecret keeps reporting
+// its previous condition even though the Secret was unsealed.
+func TestStatusUpdateFailureIsRetried(t *testing.T) {
+	ctx := context.Background()
+
+	clientset := fake.NewClientset()
+	keyRegistry := NewKeyRegistry(clientset, "kube-system", "prefix", SealedSecretsKeyLabel, 2048)
+	key, cert, err := generatePrivateKeyAndCert(2048, time.Hour, "cn")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := keyRegistry.registerNewKey("prefix1", key, cert, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "foo"},
+		Data:       map[string][]byte{"foo": []byte("bar")},
+	}
+	ss, err := ssv1alpha1.NewSealedSecret(scheme.Codecs, &key.PublicKey, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ssc := ssfake.NewSimpleClientset(ss)
+	var statusUpdates int
+	ssc.PrependReactor("update", "sealedsecrets", func(action ktesting.Action) (bool, runtime.Object, error) {
+		if action.GetSubresource() != "status" {
+			return false, nil, nil
+		}
+		statusUpdates++
+		if statusUpdates == 1 {
+			return true, nil, k8serrors.NewConflict(ssv1alpha1.Resource("sealedsecrets"), "foo", errors.New("the object has been modified"))
+		}
+		return false, nil, nil
+	})
+
+	ssinformer := ssinformers.NewSharedInformerFactory(ssc, 0)
+	sinformer := informers.NewSharedInformerFactory(clientset, 0)
+	c, err := NewController(clientset, ssc, ssinformer, sinformer, nil, keyRegistry, 5, "CertNotBefore")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.updateStatus = true
+
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	go c.Run(stopCh)
+
+	var got *ssv1alpha1.SealedSecret
+	for i := 0; i < 100; i++ {
+		got, err = ssc.BitnamiV1alpha1().SealedSecrets("default").Get(ctx, "foo", metav1.GetOptions{})
+		if err == nil && got.Status != nil && len(got.Status.Conditions) > 0 {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if got == nil || got.Status == nil || len(got.Status.Conditions) == 0 {
+		t.Fatalf("expected the status to be written after the first update failed, %d status update(s) attempted", statusUpdates)
+	}
+	if cond := got.Status.Conditions[0]; cond.Type != ssv1alpha1.SealedSecretSynced || cond.Status != corev1.ConditionTrue {
+		t.Fatalf("expected Synced=True, got %s=%s", cond.Type, cond.Status)
 	}
 }
