@@ -243,7 +243,8 @@ func watchSecrets(sinformer informers.SharedInformerFactory, ssclientset ssclien
 	return sInformer, nil
 }
 
-// secretEventHandlers re-queues the owning SealedSecret when a managed Secret is modified or deleted.
+// secretEventHandlers re-queues the owning SealedSecret when a managed Secret is modified or deleted,
+// and the SealedSecret of the same name when a Secret is annotated to be managed or patched.
 func secretEventHandlers(ssclientset ssclientset.Interface, queue workqueue.TypedRateLimitingInterface[string]) cache.ResourceEventHandlerFuncs {
 	return cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
@@ -255,10 +256,11 @@ func secretEventHandlers(ssclientset ssclientset.Interface, queue workqueue.Type
 			if !ok {
 				return
 			}
-			if !secretChanged(oldSecret, newSecret) {
+			takeover := takeoverRequested(oldSecret, newSecret)
+			if !takeover && !secretChanged(oldSecret, newSecret) {
 				return
 			}
-			enqueueOwningSealedSecret(ssclientset, queue, newSecret)
+			enqueueOwningSealedSecret(ssclientset, queue, newSecret, takeover)
 		},
 		DeleteFunc: func(obj interface{}) {
 			if tombstone, ok := obj.(cache.DeletedFinalStateUnknown); ok {
@@ -269,7 +271,7 @@ func secretEventHandlers(ssclientset ssclientset.Interface, queue workqueue.Type
 				slog.Error("unexpected object type in Secret delete handler", "type", fmt.Sprintf("%T", obj))
 				return
 			}
-			enqueueOwningSealedSecret(ssclientset, queue, secret)
+			enqueueOwningSealedSecret(ssclientset, queue, secret, false)
 		},
 	}
 }
@@ -282,8 +284,15 @@ func secretChanged(oldSecret, newSecret *corev1.Secret) bool {
 		oldSecret.Type != newSecret.Type
 }
 
+// takeoverRequested reports whether a Secret update added the managed or the patch annotation.
+func takeoverRequested(oldSecret, newSecret *corev1.Secret) bool {
+	return (isAnnotatedToBeManaged(newSecret) && !isAnnotatedToBeManaged(oldSecret)) ||
+		(isAnnotatedToBePatched(newSecret) && !isAnnotatedToBePatched(oldSecret))
+}
+
 // enqueueOwningSealedSecret queues the SealedSecret that owns or manages the given Secret, if any.
-func enqueueOwningSealedSecret(ssclientset ssclientset.Interface, queue workqueue.TypedRateLimitingInterface[string], secret *corev1.Secret) {
+// With takeover set, the SealedSecret of the same name is queued even if it does not own or manage the Secret.
+func enqueueOwningSealedSecret(ssclientset ssclientset.Interface, queue workqueue.TypedRateLimitingInterface[string], secret *corev1.Secret, takeover bool) {
 	skey := secret.Namespace + "/" + secret.Name
 
 	ssecret, err := ssclientset.BitnamiV1alpha1().SealedSecrets(secret.Namespace).Get(context.Background(), secret.Name, metav1.GetOptions{})
@@ -294,7 +303,7 @@ func enqueueOwningSealedSecret(ssclientset ssclientset.Interface, queue workqueu
 		return
 	}
 
-	if !metav1.IsControlledBy(secret, ssecret) && !isAnnotatedToBeManaged(secret) {
+	if !takeover && !metav1.IsControlledBy(secret, ssecret) && !isAnnotatedToBeManaged(secret) {
 		return
 	}
 

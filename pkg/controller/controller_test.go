@@ -835,9 +835,60 @@ func TestSecretUpdateHandler(t *testing.T) {
 			wantKey: "ns/db",
 		},
 		{
+			name:          "unowned secret annotated to be managed",
+			sealedSecrets: []runtime.Object{ss},
+			secret:        &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "db"}, Data: data},
+			modify: func(s *corev1.Secret) {
+				s.Annotations = map[string]string{ssv1alpha1.SealedSecretManagedAnnotation: "true"}
+			},
+			wantKey: "ns/db",
+		},
+		{
+			name:          "unowned secret annotated to be patched",
+			sealedSecrets: []runtime.Object{ss},
+			secret:        &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "db"}, Data: data},
+			modify: func(s *corev1.Secret) {
+				s.Annotations = map[string]string{ssv1alpha1.SealedSecretPatchAnnotation: "true"}
+			},
+			wantKey: "ns/db",
+		},
+		{
+			name:          "patched secret modified",
+			sealedSecrets: []runtime.Object{ss},
+			secret: &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace:   "ns",
+					Name:        "db",
+					Annotations: map[string]string{ssv1alpha1.SealedSecretPatchAnnotation: "true"},
+				},
+				Data: data,
+			},
+			modify: func(s *corev1.Secret) { s.Data["password"] = []byte("oops") },
+		},
+		{
+			name:          "managed annotation removed",
+			sealedSecrets: []runtime.Object{ss},
+			secret: &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace:   "ns",
+					Name:        "db",
+					Annotations: map[string]string{ssv1alpha1.SealedSecretManagedAnnotation: "true"},
+				},
+				Data: data,
+			},
+			modify: func(s *corev1.Secret) { s.Annotations = nil },
+		},
+		{
 			name:   "no matching sealed secret",
 			secret: &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "unrelated"}, Data: data},
 			modify: func(s *corev1.Secret) { s.Data["password"] = []byte("changed") },
+		},
+		{
+			name:   "annotated to be managed with no matching sealed secret",
+			secret: &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "unrelated"}, Data: data},
+			modify: func(s *corev1.Secret) {
+				s.Annotations = map[string]string{ssv1alpha1.SealedSecretManagedAnnotation: "true"}
+			},
 		},
 	}
 	for _, tc := range tests {
