@@ -140,3 +140,67 @@ func TestWriteKey(t *testing.T) {
 		}
 	}
 }
+
+func TestParseKeyValuePairs(t *testing.T) {
+	tests := []struct {
+		name    string
+		list    string
+		want    map[string]string
+		wantErr bool
+	}{
+		{name: "empty", list: "", want: map[string]string{}},
+		{name: "pairs", list: "a=1,b.c/d=2", want: map[string]string{"a": "1", "b.c/d": "2"}},
+		{name: "value with equals sign", list: "url=https://example.com/?a=1&b=2,pad=dGVzdA==", want: map[string]string{"url": "https://example.com/?a=1&b=2", "pad": "dGVzdA=="}},
+		{name: "empty value", list: "a=", want: map[string]string{"a": ""}},
+		{name: "duplicate and empty entries", list: "a=1,,a=1,", want: map[string]string{"a": "1"}},
+		{name: "missing equals sign", list: "a=1,b", wantErr: true},
+		{name: "missing key", list: "=1", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseKeyValuePairs(tt.list)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("parseKeyValuePairs(%q) error = %v, wantErr %v", tt.list, err, tt.wantErr)
+			}
+			if tt.wantErr {
+				return
+			}
+			if len(got) != len(tt.want) {
+				t.Fatalf("parseKeyValuePairs(%q) = %v, want %v", tt.list, got, tt.want)
+			}
+			for k, v := range tt.want {
+				if got[k] != v {
+					t.Errorf("parseKeyValuePairs(%q)[%q] = %q, want %q", tt.list, k, got[k], v)
+				}
+			}
+		})
+	}
+}
+
+func TestWriteKeyInvalidLabelsAndAnnotations(t *testing.T) {
+	ctx := context.Background()
+	rand := testRand()
+	key, err := rsa.GenerateKey(rand, 2048)
+	if err != nil {
+		t.Fatalf("Failed to generate test key: %v", err)
+	}
+	cert, err := signKey(rand, key)
+	if err != nil {
+		t.Fatalf("signKey failed: %v", err)
+	}
+
+	for name, tc := range map[string]struct{ annotations, labels string }{
+		"label without value":      {labels: "team"},
+		"annotation without value": {annotations: "owner"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			client := fake.NewClientset()
+			if _, err := writeKey(ctx, client, key, []*x509.Certificate{cert}, "myns", "default-label", "mykey", tc.annotations, tc.labels); err == nil {
+				t.Errorf("writeKey() should fail for labels %q and annotations %q", tc.labels, tc.annotations)
+			}
+			if a := findAction(client, "create", "secrets"); a != nil {
+				t.Errorf("writeKey() created a secret despite invalid input")
+			}
+		})
+	}
+}
