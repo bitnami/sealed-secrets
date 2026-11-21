@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -24,6 +25,23 @@ var (
 	// ErrPrivateKeyNotRSA is returned when the private key is not a valid RSA key.
 	ErrPrivateKeyNotRSA = errors.New("private key is not an RSA key")
 )
+
+// parseKeyValuePairs parses a comma-separated list of key=value pairs.
+// The value is everything after the first "=", so it may itself contain "=". Empty entries are ignored.
+func parseKeyValuePairs(list string) (map[string]string, error) {
+	pairs := map[string]string{}
+	for _, pair := range strings.Split(list, ",") {
+		if strings.TrimSpace(pair) == "" {
+			continue
+		}
+		key, value, found := strings.Cut(pair, "=")
+		if !found || key == "" {
+			return nil, fmt.Errorf("%q is not a key=value pair", pair)
+		}
+		pairs[key] = value
+	}
+	return pairs, nil
+}
 
 func generatePrivateKeyAndCert(keySize int, validFor time.Duration, cn string) (*rsa.PrivateKey, *x509.Certificate, error) {
 	return crypto.GeneratePrivateKeyAndCert(keySize, validFor, cn)
@@ -70,22 +88,22 @@ func writeKey(ctx context.Context, client kubernetes.Interface, key *rsa.Private
 
 	annotations := map[string]string{}
 
-	if additionalLabels != "" {
-		for _, label := range removeDuplicates(strings.Split(additionalLabels, ",")) {
-			key := strings.Split(label, "=")[0]
-			value := strings.Split(label, "=")[1]
-			if key != krLabel {
-				labels[key] = value
-			}
+	additional, err := parseKeyValuePairs(additionalLabels)
+	if err != nil {
+		return "", fmt.Errorf("invalid private key labels: %w", err)
+	}
+	for key, value := range additional {
+		if key != krLabel {
+			labels[key] = value
 		}
 	}
 
-	if additionalAnnotations != "" {
-		for _, label := range removeDuplicates(strings.Split(additionalAnnotations, ",")) {
-			key := strings.Split(label, "=")[0]
-			value := strings.Split(label, "=")[1]
-			annotations[key] = value
-		}
+	additional, err = parseKeyValuePairs(additionalAnnotations)
+	if err != nil {
+		return "", fmt.Errorf("invalid private key annotations: %w", err)
+	}
+	for key, value := range additional {
+		annotations[key] = value
 	}
 
 	secret := v1.Secret{
